@@ -1,6 +1,5 @@
 'use client';
 
-import { use } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import type { BroadcastDetail } from '@nrw/shared';
@@ -18,8 +17,8 @@ function StatusPill({ status }: { status: string }) {
   return <span className={`rounded px-2 py-0.5 text-xs ${color}`}>{status}</span>;
 }
 
-export default function BroadcastDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function BroadcastDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const { ready } = useRequireAuth();
 
   const query = useQuery({
