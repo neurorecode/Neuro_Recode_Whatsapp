@@ -100,8 +100,12 @@ services:
     expose:
       - '3000'
 
+  # nginx + certbot are only for a STANDALONE VPS (no existing reverse proxy).
+  # On a host that already runs Traefik/another proxy, leave them off (default)
+  # and use docker-compose.traefik.yml instead.
   nginx:
     image: nginx:alpine
+    profiles: ['standalone']
     restart: unless-stopped
     depends_on:
       - api
@@ -122,6 +126,7 @@ services:
   # Obtains and auto-renews the Let's Encrypt certificate (see init-letsencrypt.sh).
   certbot:
     image: certbot/certbot
+    profiles: ['standalone']
     restart: unless-stopped
     volumes:
       - ./data/certbot/conf:/etc/letsencrypt

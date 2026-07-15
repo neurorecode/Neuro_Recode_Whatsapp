@@ -144,6 +144,26 @@ docker compose logs -f api    # watch inbound events + sends in real time
 
 ---
 
+## Alternative: deploy behind an existing Traefik (e.g. alongside Frappe)
+
+If the VPS already runs Traefik on 80/443 (Frappe's `frappe_docker-proxy`), do **not**
+run our nginx/certbot — Traefik owns the ports and issues TLS. Skip Step 6 entirely.
+
+1. In `.env`, set the three URLs to `https://<your-domain>` (as in Step 5).
+2. Make sure `infra/.env` exists: `cd infra && [ -e .env ] || ln -s ../.env .env`
+3. Bring the stack up with the Traefik overlay (nginx/certbot stay off by default):
+   ```bash
+   docker compose -f docker-compose.yml -f docker-compose.traefik.yml up -d --build
+   ```
+   This joins our `web`/`api` to Traefik's network (`frappe_docker_default`) and adds
+   routing labels for your domain, with TLS via Traefik's `main-resolver`.
+4. Give Traefik ~30–60s to obtain the cert, then: `curl https://<your-domain>/health`.
+
+The overlay assumes Traefik entrypoint `websecure`, certresolver `main-resolver`, and
+network `frappe_docker_default`. If yours differ, edit `docker-compose.traefik.yml`
+(the `traefik.*` labels and the `edge` network name). Continue at **Step 8** to wire the
+Meta webhook.
+
 ## Troubleshooting
 
 - **Webhook won't verify (Meta shows an error):**

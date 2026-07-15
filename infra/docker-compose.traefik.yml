@@ -1,0 +1,46 @@
+# Overlay for a VPS that ALREADY runs Traefik (e.g. alongside Frappe).
+# Instead of our own nginx/certbot, we join our web+api to Traefik's network and
+# let Traefik route the domain + issue TLS via its existing "main-resolver".
+#
+# Usage (from infra/):
+#   docker compose -f docker-compose.yml -f docker-compose.traefik.yml up -d --build
+#
+# Assumes Traefik: entrypoint `websecure` (:443), certresolver `main-resolver`,
+# providers.docker.exposedbydefault=false, network `frappe_docker_default`.
+# If your Traefik network differs, change TRAEFIK_NETWORK below and the
+# `traefik.docker.network` labels.
+
+networks:
+  edge:
+    external: true
+    name: frappe_docker_default
+
+services:
+  api:
+    networks:
+      - default
+      - edge
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=frappe_docker_default
+      # API paths take priority over the web catch-all router.
+      - "traefik.http.routers.nrw-api.rule=Host(`whatsappchat.neurorecode.in`) && (PathPrefix(`/api`) || PathPrefix(`/webhooks`) || PathPrefix(`/socket.io`) || PathPrefix(`/health`))"
+      - traefik.http.routers.nrw-api.entrypoints=websecure
+      - traefik.http.routers.nrw-api.tls.certresolver=main-resolver
+      - traefik.http.routers.nrw-api.priority=100
+      - traefik.http.routers.nrw-api.service=nrw-api
+      - traefik.http.services.nrw-api.loadbalancer.server.port=4000
+
+  web:
+    networks:
+      - default
+      - edge
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=frappe_docker_default
+      - "traefik.http.routers.nrw-web.rule=Host(`whatsappchat.neurorecode.in`)"
+      - traefik.http.routers.nrw-web.entrypoints=websecure
+      - traefik.http.routers.nrw-web.tls.certresolver=main-resolver
+      - traefik.http.routers.nrw-web.priority=1
+      - traefik.http.routers.nrw-web.service=nrw-web
+      - traefik.http.services.nrw-web.loadbalancer.server.port=3000
