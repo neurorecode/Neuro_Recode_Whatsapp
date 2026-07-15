@@ -94,6 +94,15 @@ Success ends with: `Done. TLS is live: https://chat.neurorecode.com`.
 
 ## Step 7 — Build and start the whole stack
 
+The project `.env` lives at the repo root, but `docker compose` reads `.env` from
+the folder you run it in (`infra/`). `init-letsencrypt.sh` creates a symlink
+(`infra/.env → ../.env`) so interpolation works. If you skipped the TLS step, make
+the link yourself first:
+```bash
+cd /opt/neuro-recode-whatsapp/infra
+[ -e .env ] || ln -s ../.env .env
+```
+
 ```bash
 # still in infra/
 docker compose up -d --build
@@ -143,5 +152,7 @@ docker compose logs -f api    # watch inbound events + sends in real time
 - **TLS/cert errors:** confirm `dig +short DOMAIN` shows the VPS IP, ports 80/443 are open, then re-run `./init-letsencrypt.sh`.
 - **Messages arrive but nothing shows live:** check `docker compose logs api` for signature failures (`Invalid webhook signature`) — means `WHATSAPP_APP_SECRET` is wrong.
 - **Reply fails with "24-hour service window closed":** expected — you can only free-text a customer within 24h of their last message. Templates come in a later phase.
+- **`variable is not set` warnings / blank config:** `docker compose` isn't seeing the root `.env`. Ensure `infra/.env` exists (symlink to `../.env`) and run compose from `infra/`.
+- **`Bind for 0.0.0.0:80 failed: port is already allocated`:** something else holds port 80/443. Find it with `ss -tlnp | grep -E ':80|:443'`. If it's a host web server: `systemctl stop apache2 nginx 2>/dev/null; systemctl disable apache2 nginx 2>/dev/null`. If it's a leftover container: `docker compose down` (from `infra/`), then retry.
 - **Restart everything:** `docker compose down && docker compose up -d --build`.
 - **Certs auto-renew** via the `certbot` container; nginx reloads every 6h to pick them up. No action needed.

@@ -23,6 +23,14 @@ CERTBOT_EMAIL="${CERTBOT_EMAIL:-$(read_env CERTBOT_EMAIL)}"
 : "${DOMAIN:?Set DOMAIN in .env (e.g. whatsappchat.neurorecode.in)}"
 : "${CERTBOT_EMAIL:?Set CERTBOT_EMAIL in .env}"
 
+# docker compose auto-loads .env from the current directory (infra/), but the
+# project .env lives at the repo root. Link it here so ${VAR} interpolation in
+# docker-compose.yml resolves for every compose command (script + manual).
+if [ ! -e .env ] && [ -f ../.env ]; then
+  ln -s ../.env .env
+  echo "### Linked ../.env -> infra/.env for docker compose"
+fi
+
 data_path="./data/certbot"
 staging="${STAGING:-0}"
 
