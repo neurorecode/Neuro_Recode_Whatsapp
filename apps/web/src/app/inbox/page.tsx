@@ -10,10 +10,12 @@ import { getSocket, disconnectSocket } from '@/lib/socket';
 import { ConversationList } from '@/components/ConversationList';
 import { MessageThread } from '@/components/MessageThread';
 import { Composer } from '@/components/Composer';
+import { ContactControls } from '@/components/ContactControls';
+import { AppNav } from '@/components/AppNav';
 
 export default function InboxPage() {
   const router = useRouter();
-  const { token, agent, hydrated, logout } = useAuth();
+  const { token, hydrated } = useAuth();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<ConversationListItem | null>(null);
 
@@ -63,6 +65,15 @@ export default function InboxPage() {
 
   useEffect(() => () => disconnectSocket(), []);
 
+  // Keep the selected conversation fresh when the list refetches (e.g. after
+  // editing the contact's tags / opt-in, or a new inbound message).
+  useEffect(() => {
+    setSelected((cur) => {
+      if (!cur) return cur;
+      return (conversationsQuery.data ?? []).find((c) => c.id === cur.id) ?? cur;
+    });
+  }, [conversationsQuery.data]);
+
   async function onSelect(c: ConversationListItem) {
     setSelected(c);
     if (c.unreadCount > 0) {
@@ -90,61 +101,59 @@ export default function InboxPage() {
   }
 
   return (
-    <main className="flex h-screen">
-      {/* Sidebar */}
-      <aside className="flex w-96 flex-none flex-col border-r bg-white">
-        <header className="flex items-center justify-between bg-brand-dark px-4 py-3 text-white">
-          <div>
-            <div className="font-semibold">Neuro Recode Inbox</div>
-            <div className="text-xs opacity-80">{agent?.name}</div>
-          </div>
-          <button
-            onClick={() => {
-              disconnectSocket();
-              logout();
-              router.replace('/login');
-            }}
-            className="rounded bg-white/10 px-2 py-1 text-xs hover:bg-white/20"
-          >
-            Logout
-          </button>
-        </header>
-        <ConversationList
-          conversations={conversations}
-          selectedId={selected?.id ?? null}
-          onSelect={onSelect}
-        />
-      </aside>
+    <main className="flex h-screen flex-col">
+      <AppNav />
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <aside className="flex w-96 flex-none flex-col border-r bg-white">
+          <header className="border-b bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-600">
+            Conversations
+          </header>
+          <ConversationList
+            conversations={conversations}
+            selectedId={selected?.id ?? null}
+            onSelect={onSelect}
+          />
+        </aside>
 
-      {/* Thread */}
-      <section className="flex flex-1 flex-col">
-        {selected ? (
-          <>
-            <header className="flex items-center gap-3 border-b bg-white px-4 py-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">
-                {selectedName.slice(0, 2).toUpperCase()}
-              </div>
-              <div>
-                <div className="font-medium">{selectedName}</div>
-                <div className="text-xs text-gray-400">
-                  {selected.contact.waId} ·{' '}
-                  {selected.windowOpen ? (
-                    <span className="text-green-600">window open</span>
-                  ) : (
-                    <span className="text-yellow-600">window closed</span>
-                  )}
+        {/* Thread */}
+        <section className="flex flex-1 flex-col">
+          {selected ? (
+            <>
+              <header className="flex items-center gap-3 border-b bg-white px-4 py-3">
+                <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">
+                  {selectedName.slice(0, 2).toUpperCase()}
                 </div>
-              </div>
-            </header>
-            <MessageThread messages={messages} />
-            <Composer disabled={false} windowOpen={selected.windowOpen} onSend={onSend} />
-          </>
-        ) : (
-          <div className="flex flex-1 items-center justify-center bg-[#efeae2] text-gray-400">
-            Select a conversation to start
-          </div>
-        )}
-      </section>
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium">{selectedName}</div>
+                  <div className="text-xs text-gray-400">
+                    {selected.contact.waId} ·{' '}
+                    {selected.windowOpen ? (
+                      <span className="text-green-600">window open</span>
+                    ) : (
+                      <span className="text-yellow-600">window closed</span>
+                    )}
+                  </div>
+                </div>
+                <ContactControls
+                  contactId={selected.contact.id}
+                  tags={selected.contact.tags}
+                  optInStatus={selected.contact.optInStatus}
+                  onUpdated={() =>
+                    queryClient.invalidateQueries({ queryKey: ['conversations'] })
+                  }
+                />
+              </header>
+              <MessageThread messages={messages} />
+              <Composer disabled={false} windowOpen={selected.windowOpen} onSend={onSend} />
+            </>
+          ) : (
+            <div className="flex flex-1 items-center justify-center bg-[#efeae2] text-gray-400">
+              Select a conversation to start
+            </div>
+          )}
+        </section>
+      </div>
     </main>
   );
 }

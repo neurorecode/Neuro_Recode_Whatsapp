@@ -24,6 +24,8 @@ export interface ContactDto {
   displayName: string | null;
   profileName: string | null;
   phone: string | null;
+  tags: string[];
+  optInStatus: string;
 }
 
 export interface ConversationListItem {
@@ -51,4 +53,69 @@ export interface MessageDto {
 
 export interface SendMessageRequest {
   body: string;
+}
+
+// ---- Phase 4: templates & broadcasts ----
+
+export interface TemplateDto {
+  id: string;
+  name: string;
+  language: string;
+  category: string;
+  status: string;
+  bodyText: string | null;
+  bodyVarCount: number;
+}
+
+export interface BroadcastCounts {
+  queued: number;
+  sent: number;
+  delivered: number;
+  read: number;
+  failed: number;
+}
+
+export interface BroadcastListItem {
+  id: string;
+  name: string;
+  status: string;
+  createdAt: string;
+  templateName: string;
+  total: number;
+  counts: BroadcastCounts;
+}
+
+export interface BroadcastRecipientDto {
+  id: string;
+  contactName: string;
+  waId: string;
+  status: string;
+  errorMessage: string | null;
+}
+
+export interface BroadcastDetail {
+  id: string;
+  name: string;
+  status: string;
+  createdAt: string;
+  template: { id: string; name: string; language: string };
+  total: number;
+  counts: BroadcastCounts;
+  recipients: BroadcastRecipientDto[];
+}
+
+export interface CreateBroadcastRequest {
+  name: string;
+  templateId: string;
+  tags: string[];
+  bodyParams: string[];
+}
+
+export interface ContactManageDto {
+  id: string;
+  waId: string;
+  displayName: string | null;
+  profileName: string | null;
+  tags: string[];
+  optInStatus: string;
 }

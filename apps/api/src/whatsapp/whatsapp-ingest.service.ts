@@ -153,6 +153,14 @@ export class WhatsappIngestService {
   }
 
   private async handleStatus(status: WhatsAppStatus): Promise<void> {
+    // Broadcast messages are tracked as BroadcastRecipient rows (not Message),
+    // so advance their delivery status too.
+    const mappedForBroadcast = this.mapStatus(status.status);
+    await this.prisma.broadcastRecipient.updateMany({
+      where: { wamid: status.id },
+      data: { status: mappedForBroadcast },
+    });
+
     // Statuses can arrive multiple times; only advance the state forward.
     const message = await this.prisma.message.findUnique({ where: { wamid: status.id } });
     if (!message) return;

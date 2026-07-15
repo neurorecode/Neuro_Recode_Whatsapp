@@ -30,6 +30,8 @@ export class ConversationsService {
         displayName: c.contact.displayName,
         profileName: c.contact.profileName,
         phone: c.contact.phone,
+        tags: c.contact.tags,
+        optInStatus: c.contact.optInStatus,
       },
       windowOpen: this.windowOpen(c.contact.windowExpiresAt),
     }));

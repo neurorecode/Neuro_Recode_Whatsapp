@@ -7,6 +7,9 @@ import { AuthModule } from './auth/auth.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { MessagesModule } from './messages/messages.module';
+import { ContactsModule } from './contacts/contacts.module';
+import { TemplatesModule } from './templates/templates.module';
+import { BroadcastsModule } from './broadcasts/broadcasts.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { HealthController } from './health.controller';
 
@@ -19,6 +22,9 @@ import { HealthController } from './health.controller';
     AuthModule,
     ConversationsModule,
     MessagesModule,
+    ContactsModule,
+    TemplatesModule,
+    BroadcastsModule,
     WhatsappModule,
   ],
   controllers: [HealthController],
