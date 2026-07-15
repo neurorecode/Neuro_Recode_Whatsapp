@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { WhatsappService } from './whatsapp.service';
+import { MediaStorageService } from '../media/media-storage.service';
 import {
   WhatsAppWebhookBody,
   WhatsAppChangeValue,
@@ -19,6 +21,8 @@ export class WhatsappIngestService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly realtime: RealtimeGateway,
+    private readonly whatsapp: WhatsappService,
+    private readonly storage: MediaStorageService,
   ) {}
 
   async handleWebhook(body: WhatsAppWebhookBody): Promise<void> {
@@ -99,6 +103,26 @@ export class WhatsappIngestService {
     const { type, body } = this.extractContent(msg);
     const timestamp = new Date(parseInt(msg.timestamp, 10) * 1000);
 
+    // Download + store any media so it survives (Meta media URLs expire ~5 min).
+    let mediaKey: string | null = null;
+    let mediaMime: string | null = null;
+    let mediaFilename: string | null = null;
+    const descriptor = this.mediaDescriptor(msg);
+    if (descriptor) {
+      try {
+        const { url, mime } = await this.whatsapp.getMediaUrl(descriptor.id);
+        const buf = await this.whatsapp.downloadMedia(url);
+        const key = `inbound/${descriptor.id}`;
+        const finalMime = mime || descriptor.mime || 'application/octet-stream';
+        await this.storage.put(key, buf, finalMime);
+        mediaKey = key;
+        mediaMime = finalMime;
+        mediaFilename = descriptor.filename ?? null;
+      } catch (e: any) {
+        this.logger.warn(`media download failed for ${msg.id}: ${e?.message}`);
+      }
+    }
+
     const message = await this.prisma.message.create({
       data: {
         wamid: msg.id,
@@ -106,6 +130,9 @@ export class WhatsappIngestService {
         direction: 'inbound',
         type,
         body,
+        mediaKey,
+        mediaMime,
+        mediaFilename,
         status: 'delivered',
         raw: msg as unknown as Prisma.InputJsonValue,
         timestamp,
@@ -130,6 +157,7 @@ export class WhatsappIngestService {
         direction: 'inbound',
         type: message.type,
         body: message.body,
+        mediaUrl: mediaKey ? `/api/media/${message.id}` : null,
         status: message.status,
         senderAgentId: null,
         timestamp: timestamp.toISOString(),
@@ -208,6 +236,28 @@ export class WhatsappIngestService {
         return { type: 'interactive', body: null };
       default:
         return { type: 'unsupported', body: null };
+    }
+  }
+
+  /** Media id + mime + (document) filename for a media-bearing inbound message. */
+  private mediaDescriptor(
+    msg: WhatsAppInboundMessage,
+  ): { id: string; mime?: string; filename?: string } | null {
+    switch (msg.type) {
+      case 'image':
+        return msg.image ? { id: msg.image.id, mime: msg.image.mime_type } : null;
+      case 'video':
+        return msg.video ? { id: msg.video.id, mime: msg.video.mime_type } : null;
+      case 'audio':
+        return msg.audio ? { id: msg.audio.id, mime: msg.audio.mime_type } : null;
+      case 'sticker':
+        return msg.sticker ? { id: msg.sticker.id, mime: msg.sticker.mime_type } : null;
+      case 'document':
+        return msg.document
+          ? { id: msg.document.id, mime: msg.document.mime_type, filename: msg.document.filename }
+          : null;
+      default:
+        return null;
     }
   }
 

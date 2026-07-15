@@ -10,6 +10,7 @@ import { MessagesModule } from './messages/messages.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { TemplatesModule } from './templates/templates.module';
 import { BroadcastsModule } from './broadcasts/broadcasts.module';
+import { MediaModule } from './media/media.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { HealthController } from './health.controller';
 
@@ -18,6 +19,7 @@ import { HealthController } from './health.controller';
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     PrismaModule,
     RedisModule,
+    MediaModule,
     RealtimeModule,
     AuthModule,
     ConversationsModule,

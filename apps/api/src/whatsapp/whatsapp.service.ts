@@ -85,6 +85,52 @@ export class WhatsappService {
     return { wamid: res.data?.messages?.[0]?.id as string };
   }
 
+  // ---- Media ----
+
+  /** Resolve a media id to a (short-lived) download URL + mime. */
+  async getMediaUrl(mediaId: string): Promise<{ url: string; mime: string }> {
+    const res = await this.http.get(`/${mediaId}`);
+    return { url: res.data?.url, mime: res.data?.mime_type };
+  }
+
+  /** Download media bytes (the URL requires our bearer token). */
+  async downloadMedia(url: string): Promise<Buffer> {
+    const res = await this.http.get(url, { responseType: 'arraybuffer' });
+    return Buffer.from(res.data);
+  }
+
+  /** Upload media to WhatsApp; returns a media id usable in a send. */
+  async uploadMedia(body: Buffer, mime: string, filename: string): Promise<string> {
+    const form = new FormData();
+    form.append('messaging_product', 'whatsapp');
+    form.append('file', new Blob([body], { type: mime }), filename);
+    const res = await this.http.post(`/${this.phoneNumberId}/media`, form);
+    return res.data?.id as string;
+  }
+
+  /** Send a media message by uploaded media id. */
+  async sendMedia(
+    to: string,
+    type: 'image' | 'video' | 'audio' | 'document',
+    mediaId: string,
+    caption?: string,
+    filename?: string,
+  ): Promise<SendResult> {
+    const media: Record<string, unknown> = { id: mediaId };
+    if (caption && (type === 'image' || type === 'video' || type === 'document')) {
+      media.caption = caption;
+    }
+    if (filename && type === 'document') media.filename = filename;
+    const res = await this.http.post(`/${this.phoneNumberId}/messages`, {
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to,
+      type,
+      [type]: media,
+    });
+    return { wamid: res.data?.messages?.[0]?.id as string };
+  }
+
   /** Mark an inbound message as read (blue ticks on the customer side). */
   async markRead(wamid: string): Promise<void> {
     try {

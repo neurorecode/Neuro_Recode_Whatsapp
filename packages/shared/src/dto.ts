@@ -46,6 +46,7 @@ export interface MessageDto {
   type: string;
   body: string | null;
   mediaUrl: string | null;
+  mediaFilename: string | null;
   status: string;
   senderAgentId: string | null;
   timestamp: string;

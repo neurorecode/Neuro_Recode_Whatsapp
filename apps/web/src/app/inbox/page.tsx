@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ConversationListItem, MessageDto } from '@nrw/shared';
 import { useAuth } from '@/lib/auth';
-import { api } from '@/lib/api';
+import { api, uploadMedia } from '@/lib/api';
 import { getSocket, disconnectSocket } from '@/lib/socket';
 import { ConversationList } from '@/components/ConversationList';
 import { MessageThread } from '@/components/MessageThread';
@@ -89,6 +89,13 @@ export default function InboxPage() {
     queryClient.invalidateQueries({ queryKey: ['conversations'] });
   }
 
+  async function onSendMedia(file: File, caption?: string) {
+    if (!selected) return;
+    await uploadMedia(selected.id, file, caption);
+    queryClient.invalidateQueries({ queryKey: ['messages', selected.id] });
+    queryClient.invalidateQueries({ queryKey: ['conversations'] });
+  }
+
   const conversations = conversationsQuery.data ?? [];
   const messages = messagesQuery.data ?? [];
   const selectedName = useMemo(() => {
@@ -145,7 +152,12 @@ export default function InboxPage() {
                 />
               </header>
               <MessageThread messages={messages} />
-              <Composer disabled={false} windowOpen={selected.windowOpen} onSend={onSend} />
+              <Composer
+                disabled={false}
+                windowOpen={selected.windowOpen}
+                onSend={onSend}
+                onSendMedia={onSendMedia}
+              />
             </>
           ) : (
             <div className="flex flex-1 items-center justify-center bg-[#efeae2] text-gray-400">

@@ -1,19 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 export function Composer({
   disabled,
   windowOpen,
   onSend,
+  onSendMedia,
 }: {
   disabled: boolean;
   windowOpen: boolean;
   onSend: (body: string) => Promise<void>;
+  onSendMedia: (file: File, caption?: string) => Promise<void>;
 }) {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function submit() {
     const body = text.trim();
@@ -25,6 +28,22 @@ export function Composer({
       setText('');
     } catch (e: any) {
       setError(e?.message ?? 'Failed to send message');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function onFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file
+    if (!file || sending) return;
+    setSending(true);
+    setError(null);
+    try {
+      await onSendMedia(file, text.trim() || undefined);
+      setText('');
+    } catch (err: any) {
+      setError(err?.message ?? 'Failed to send file');
     } finally {
       setSending(false);
     }
@@ -47,6 +66,22 @@ export function Composer({
         </div>
       )}
       <div className="flex items-center gap-2 p-3">
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={onFileSelected}
+          accept="image/*,video/*,audio/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled || sending}
+          title="Attach file"
+          className="flex h-10 w-10 flex-none items-center justify-center rounded-full text-xl text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+        >
+          📎
+        </button>
         <input
           value={text}
           disabled={disabled}
