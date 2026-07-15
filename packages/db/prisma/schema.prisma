@@ -1,0 +1,323 @@
+// Neuro Recode WhatsApp — data model
+// Custom agent inbox on the WhatsApp Business Cloud API.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Agents (our staff who use the inbox)
+// ---------------------------------------------------------------------------
+enum AgentRole {
+  agent
+  admin
+}
+
+enum Presence {
+  online
+  away
+  offline
+}
+
+model Agent {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         AgentRole @default(agent)
+  presence     Presence  @default(offline)
+  teamId       String?
+  team         Team?     @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  assignedConversations Conversation[] @relation("AssignedAgent")
+  sentMessages          Message[]      @relation("SenderAgent")
+  notes                 InternalNote[]
+
+  @@index([teamId])
+}
+
+model Team {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  createdAt     DateTime       @default(now())
+  agents        Agent[]
+  conversations Conversation[]
+}
+
+// ---------------------------------------------------------------------------
+// Contacts (WhatsApp users who message us)
+// ---------------------------------------------------------------------------
+enum OptInStatus {
+  unknown
+  opted_in
+  opted_out
+}
+
+model Contact {
+  id          String      @id @default(cuid())
+  // WhatsApp id / E.164 phone number (Meta returns wa_id)
+  waId        String      @unique
+  phone       String?
+  profileName String?
+  displayName String?
+  tags        String[]    @default([])
+  optInStatus OptInStatus @default(unknown)
+  // last time the customer messaged us — drives the 24h service window
+  lastInboundAt   DateTime?
+  windowExpiresAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  conversations       Conversation[]
+  broadcastRecipients BroadcastRecipient[]
+
+  @@index([waId])
+}
+
+// ---------------------------------------------------------------------------
+// Conversations / tickets
+// ---------------------------------------------------------------------------
+enum ConversationStatus {
+  open
+  pending
+  closed
+}
+
+enum Priority {
+  low
+  normal
+  high
+  urgent
+}
+
+model Conversation {
+  id              String             @id @default(cuid())
+  contactId       String
+  contact         Contact            @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  status          ConversationStatus @default(open)
+  priority        Priority           @default(normal)
+  tags            String[]           @default([])
+  assigneeAgentId String?
+  assigneeAgent   Agent?             @relation("AssignedAgent", fields: [assigneeAgentId], references: [id], onDelete: SetNull)
+  teamId          String?
+  team            Team?              @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  lastMessageAt   DateTime?
+  lastMessageText String?
+  unreadCount     Int                @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  messages Message[]
+  notes    InternalNote[]
+
+  @@index([status])
+  @@index([assigneeAgentId])
+  @@index([lastMessageAt])
+}
+
+// ---------------------------------------------------------------------------
+// Messages
+// ---------------------------------------------------------------------------
+enum MessageDirection {
+  inbound
+  outbound
+}
+
+enum MessageType {
+  text
+  image
+  video
+  audio
+  document
+  sticker
+  location
+  contacts
+  template
+  interactive
+  system
+  unsupported
+}
+
+enum MessageStatus {
+  queued
+  sent
+  delivered
+  read
+  failed
+}
+
+model Message {
+  id             String           @id @default(cuid())
+  // WhatsApp message id (wamid). Unique when present; null for local system messages.
+  wamid          String?          @unique
+  conversationId String
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      MessageDirection
+  type           MessageType      @default(text)
+  body           String?
+  // For media messages: key of the stored object in MinIO
+  mediaKey       String?
+  mediaMime      String?
+  mediaFilename  String?
+  // For template messages
+  templateName   String?
+  // For outbound: which agent sent it (null for system/broadcast)
+  senderAgentId  String?
+  senderAgent    Agent?           @relation("SenderAgent", fields: [senderAgentId], references: [id], onDelete: SetNull)
+  status         MessageStatus    @default(queued)
+  errorCode      String?
+  errorMessage   String?
+  // Raw payload snapshot for debugging/audit
+  raw            Json?
+  timestamp      DateTime         @default(now())
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([conversationId])
+  @@index([wamid])
+  @@index([timestamp])
+}
+
+model InternalNote {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  agentId        String
+  agent          Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  body           String
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+// ---------------------------------------------------------------------------
+// Templates (synced from the Graph API)
+// ---------------------------------------------------------------------------
+enum TemplateStatus {
+  approved
+  pending
+  rejected
+  paused
+  disabled
+}
+
+enum TemplateCategory {
+  marketing
+  utility
+  authentication
+}
+
+model Template {
+  id         String           @id @default(cuid())
+  name       String
+  language   String
+  category   TemplateCategory
+  status     TemplateStatus   @default(pending)
+  // Meta template components (header/body/buttons) as returned by Graph API
+  components Json
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  broadcasts Broadcast[]
+
+  @@unique([name, language])
+}
+
+// ---------------------------------------------------------------------------
+// Broadcasts
+// ---------------------------------------------------------------------------
+enum BroadcastStatus {
+  draft
+  scheduled
+  running
+  completed
+  failed
+  cancelled
+}
+
+model Broadcast {
+  id             String          @id @default(cuid())
+  name           String
+  templateId     String
+  template       Template        @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  // Serialized audience filter (tags, opt-in, etc.)
+  audienceFilter Json?
+  status         BroadcastStatus @default(draft)
+  scheduledAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  recipients BroadcastRecipient[]
+
+  @@index([status])
+}
+
+model BroadcastRecipient {
+  id          String        @id @default(cuid())
+  broadcastId String
+  broadcast   Broadcast     @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  contactId   String
+  contact     Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  wamid       String?
+  status      MessageStatus @default(queued)
+  errorCode   String?
+  errorMessage String?
+  sentAt      DateTime?
+
+  @@unique([broadcastId, contactId])
+  @@index([broadcastId])
+}
+
+// ---------------------------------------------------------------------------
+// Calls (WhatsApp Business Calling API) — Phase 5
+// ---------------------------------------------------------------------------
+enum CallDirection {
+  inbound
+  outbound
+}
+
+enum CallStatus {
+  ringing
+  connected
+  completed
+  missed
+  declined
+  failed
+}
+
+model Call {
+  id             String        @id @default(cuid())
+  wacid          String?       @unique
+  conversationId String?
+  direction      CallDirection
+  status         CallStatus    @default(ringing)
+  agentId        String?
+  startedAt      DateTime?
+  connectedAt    DateTime?
+  endedAt        DateTime?
+  durationSec    Int?
+  createdAt      DateTime      @default(now())
+
+  @@index([conversationId])
+}
+
+// ---------------------------------------------------------------------------
+// Webhook events — idempotency + audit
+// ---------------------------------------------------------------------------
+model WebhookEvent {
+  id          String   @id @default(cuid())
+  // Dedup key (message wamid or status id). Unique to make processing idempotent.
+  eventKey    String   @unique
+  payload     Json
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+}
