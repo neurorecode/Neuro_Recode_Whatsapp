@@ -10,12 +10,11 @@ body,
 
 body {
   @apply text-gray-800 antialiased;
-  /* Light lavender canvas with soft purple glows (fallback if no image) */
+  /* Deep purple canvas with soft glows (fallback shown under the image) */
   background:
-    radial-gradient(1000px 520px at 88% 6%, rgba(255, 255, 255, 0.6), transparent 60%),
-    radial-gradient(760px 560px at 8% 2%, rgba(139, 92, 246, 0.16), transparent 55%),
-    radial-gradient(900px 760px at 55% 120%, rgba(124, 58, 237, 0.16), transparent 60%),
-    linear-gradient(120deg, #efeafc 0%, #f2eefb 45%, #ece7fb 100%);
+    radial-gradient(900px 520px at 20% 12%, rgba(139, 92, 246, 0.35), transparent 55%),
+    radial-gradient(820px 620px at 82% 88%, rgba(192, 132, 252, 0.28), transparent 55%),
+    linear-gradient(125deg, #2a1758 0%, #3b1f7a 45%, #1e1046 100%);
   background-attachment: fixed;
 }
 
