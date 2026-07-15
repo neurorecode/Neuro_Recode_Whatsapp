@@ -10,14 +10,17 @@
 set -e
 cd "$(dirname "$0")"
 
-# Load DOMAIN + CERTBOT_EMAIL from the project .env
-if [ -f ../.env ]; then
-  set -a
-  . ../.env
-  set +a
-fi
+# Read a single var from ../.env WITHOUT executing the file (values may contain
+# spaces, e.g. SEED_ADMIN_NAME="Neuro Recode Admin", which `.`-sourcing breaks on).
+read_env() {
+  grep -E "^$1=" ../.env 2>/dev/null | tail -1 | cut -d= -f2- \
+    | sed -e 's/\r$//' -e 's/^["'\'']//' -e 's/["'\'']$//'
+}
 
-: "${DOMAIN:?Set DOMAIN in .env (e.g. chat.neurorecode.com)}"
+DOMAIN="${DOMAIN:-$(read_env DOMAIN)}"
+CERTBOT_EMAIL="${CERTBOT_EMAIL:-$(read_env CERTBOT_EMAIL)}"
+
+: "${DOMAIN:?Set DOMAIN in .env (e.g. whatsappchat.neurorecode.in)}"
 : "${CERTBOT_EMAIL:?Set CERTBOT_EMAIL in .env}"
 
 data_path="./data/certbot"
