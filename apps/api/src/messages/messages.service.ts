@@ -255,6 +255,7 @@ export class MessagesService {
       mediaUrl: m.mediaKey ? `/api/media/${m.id}` : null,
       mediaFilename: m.mediaFilename,
       status: m.status,
+      errorMessage: m.errorMessage,
       senderAgentId: m.senderAgentId,
       timestamp: m.timestamp.toISOString(),
     };

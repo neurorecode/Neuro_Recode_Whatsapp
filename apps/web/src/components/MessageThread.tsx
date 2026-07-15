@@ -93,11 +93,25 @@ export function MessageThread({ messages }: { messages: MessageDto[] }) {
                   })}
                 </span>
                 {outbound && (
-                  <span className={m.status === 'read' ? 'text-brand' : ''}>
+                  <span
+                    className={
+                      m.status === 'read'
+                        ? 'text-brand'
+                        : m.status === 'failed'
+                          ? 'text-red-500'
+                          : ''
+                    }
+                    title={m.errorMessage ?? undefined}
+                  >
                     {statusTick(m.status)}
                   </span>
                 )}
               </div>
+              {outbound && m.status === 'failed' && m.errorMessage && (
+                <div className="mt-1 rounded bg-red-50 px-2 py-1 text-[11px] text-red-600">
+                  Not delivered: {m.errorMessage}
+                </div>
+              )}
             </div>
           </div>
         );

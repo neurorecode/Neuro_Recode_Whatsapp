@@ -68,6 +68,7 @@ export interface MessageDto {
   mediaUrl: string | null;
   mediaFilename: string | null;
   status: string;
+  errorMessage: string | null;
   senderAgentId: string | null;
   timestamp: string;
 }
