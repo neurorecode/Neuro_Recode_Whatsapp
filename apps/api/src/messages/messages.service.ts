@@ -5,8 +5,14 @@ import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { ConversationsService } from '../conversations/conversations.service';
 import { MediaStorageService } from '../media/media-storage.service';
+import { parseBody } from '../templates/templates.service';
 import { MessageDto } from '@nrw/shared';
 import { Message, MessageType } from '@nrw/db';
+
+function renderTemplateBody(bodyText: string | null, params: string[]): string | null {
+  if (!bodyText) return null;
+  return bodyText.replace(/\{\{\s*(\d+)\s*\}\}/g, (_m, n) => params[Number(n) - 1] ?? `{{${n}}}`);
+}
 
 export interface UploadedMedia {
   buffer: Buffer;
@@ -103,6 +109,90 @@ export class MessagesService {
       await this.markFailed(pending.id, err);
       throw new BadRequestException(err?.response?.data?.error?.message ?? 'Failed to send media');
     }
+  }
+
+  /**
+   * Start a conversation with a NEW number by sending an approved template
+   * (required — a fresh number has no open 24h window). If the number isn't on
+   * WhatsApp the send fails and we surface the error.
+   */
+  async startConversation(
+    agentId: string,
+    phoneRaw: string,
+    templateId: string,
+    bodyParams: string[],
+  ): Promise<{ conversationId: string }> {
+    const waId = (phoneRaw || '').replace(/[^0-9]/g, '');
+    if (waId.length < 8) {
+      throw new BadRequestException('Enter a valid phone number with country code');
+    }
+    const template = await this.prisma.template.findUnique({ where: { id: templateId } });
+    if (!template || template.status !== 'approved') {
+      throw new BadRequestException('Choose an approved template to start a conversation');
+    }
+
+    const { bodyText, bodyVarCount } = parseBody(template.components);
+    const components =
+      bodyVarCount > 0
+        ? [
+            {
+              type: 'body',
+              parameters: (bodyParams ?? [])
+                .slice(0, bodyVarCount)
+                .map((text) => ({ type: 'text', text })),
+            },
+          ]
+        : undefined;
+
+    let wamid: string;
+    try {
+      ({ wamid } = await this.whatsapp.sendTemplate(
+        waId,
+        template.name,
+        template.language,
+        components,
+      ));
+    } catch (err: any) {
+      throw new BadRequestException(
+        err?.response?.data?.error?.message ??
+          'Could not start the conversation — the number may not be on WhatsApp',
+      );
+    }
+
+    const contact = await this.prisma.contact.upsert({
+      where: { waId },
+      create: { waId, phone: waId },
+      update: {},
+    });
+    let conversation = await this.prisma.conversation.findFirst({
+      where: { contactId: contact.id, status: { in: ['open', 'pending'] } },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!conversation) {
+      conversation = await this.prisma.conversation.create({
+        data: { contactId: contact.id, status: 'open' },
+      });
+    }
+
+    const rendered = renderTemplateBody(bodyText, bodyParams ?? []);
+    const sent = await this.prisma.message.create({
+      data: {
+        wamid,
+        conversationId: conversation.id,
+        direction: 'outbound',
+        type: 'template',
+        body: rendered,
+        templateName: template.name,
+        status: 'sent',
+        senderAgentId: agentId,
+      },
+    });
+    await this.finishOutbound(
+      { id: conversation.id, contact },
+      sent,
+      rendered ?? `[template: ${template.name}]`,
+    );
+    return { conversationId: conversation.id };
   }
 
   private mediaTypeFromMime(mime: string): MessageType {

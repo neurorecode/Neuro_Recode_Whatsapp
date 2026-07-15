@@ -13,6 +13,7 @@ import { Composer } from '@/components/Composer';
 import { ConversationHeader } from '@/components/ConversationHeader';
 import { ContactPanel } from '@/components/ContactPanel';
 import { NotesPanel } from '@/components/NotesPanel';
+import { NewChatModal } from '@/components/NewChatModal';
 import { AppNav } from '@/components/AppNav';
 
 export default function InboxPage() {
@@ -24,6 +25,8 @@ export default function InboxPage() {
   const [mineOnly, setMineOnly] = useState(false);
   const [search, setSearch] = useState('');
   const [panel, setPanel] = useState<'info' | 'notes' | null>(null);
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [pendingSelectId, setPendingSelectId] = useState<string | null>(null);
 
   // Auth guard
   useEffect(() => {
@@ -87,6 +90,17 @@ export default function InboxPage() {
     });
   }, [conversationsQuery.data]);
 
+  // Auto-open a conversation just started via "New chat" once it appears.
+  useEffect(() => {
+    if (!pendingSelectId) return;
+    const match = (conversationsQuery.data ?? []).find((c) => c.id === pendingSelectId);
+    if (match) {
+      setSelected(match);
+      setPanel(null);
+      setPendingSelectId(null);
+    }
+  }, [conversationsQuery.data, pendingSelectId]);
+
   async function onSelect(c: ConversationListItem) {
     setSelected(c);
     if (c.unreadCount > 0) {
@@ -123,12 +137,21 @@ export default function InboxPage() {
         {/* Sidebar */}
         <aside className="flex w-96 flex-none flex-col border-r bg-white">
           <div className="space-y-2 border-b bg-gray-50 px-3 py-2">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name or number…"
-              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name or number…"
+                className="flex-1 rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
+              />
+              <button
+                onClick={() => setShowNewChat(true)}
+                title="Start a new conversation"
+                className="flex-none rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-white transition hover:bg-brand-dark"
+              >
+                + New
+              </button>
+            </div>
             <div className="flex items-center gap-1 text-xs">
               {(['all', 'open', 'pending', 'closed'] as const).map((s) => (
                 <button
@@ -195,6 +218,16 @@ export default function InboxPage() {
           <NotesPanel conversationId={selected.id} onClose={() => setPanel(null)} />
         )}
       </div>
+      {showNewChat && (
+        <NewChatModal
+          onClose={() => setShowNewChat(false)}
+          onStarted={(id) => {
+            setShowNewChat(false);
+            setPendingSelectId(id);
+            queryClient.invalidateQueries({ queryKey: ['conversations'] });
+          }}
+        />
+      )}
     </main>
   );
 }

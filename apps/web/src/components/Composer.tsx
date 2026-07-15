@@ -1,10 +1,10 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { CannedResponseDto } from '@nrw/shared';
 import { api } from '@/lib/api';
-import { IconPaperclip, IconReply, IconSend } from './icons';
+import { IconPaperclip, IconReply, IconSend, IconClose } from './icons';
 
 export function Composer({
   disabled,
@@ -21,6 +21,8 @@ export function Composer({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCanned, setShowCanned] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const cannedQuery = useQuery({
@@ -28,6 +30,13 @@ export function Composer({
     queryFn: () => api.get<CannedResponseDto[]>('/canned'),
     staleTime: 60000,
   });
+
+  // Object URL cleanup for image previews.
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   async function submit() {
     const body = text.trim();
@@ -44,15 +53,29 @@ export function Composer({
     }
   }
 
-  async function onFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+  function onFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = ''; // allow re-selecting the same file
-    if (!file || sending) return;
+    if (!file) return;
+    setError(null);
+    setPendingFile(file);
+    setPreviewUrl(file.type.startsWith('image/') ? URL.createObjectURL(file) : null);
+  }
+
+  function cancelMedia() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPendingFile(null);
+    setPreviewUrl(null);
+  }
+
+  async function confirmMedia() {
+    if (!pendingFile || sending) return;
     setSending(true);
     setError(null);
     try {
-      await onSendMedia(file, text.trim() || undefined);
+      await onSendMedia(pendingFile, text.trim() || undefined);
       setText('');
+      cancelMedia();
     } catch (err: any) {
       setError(err?.message ?? 'Failed to send file');
     } finally {
@@ -62,20 +85,88 @@ export function Composer({
 
   if (!windowOpen) {
     return (
-      <div className="border-t bg-yellow-50 p-3 text-center text-sm text-yellow-800">
-        The 24-hour service window has closed. You must send an approved template
-        (coming in the Templates &amp; Broadcasts phase).
+      <div className="border-t bg-amber-50 p-3 text-center text-sm text-amber-800">
+        The 24-hour service window has closed — send an approved template (from Templates /
+        Broadcasts) to re-engage this contact.
       </div>
     );
   }
 
+  const errorBanner = error && (
+    <div className="border-b border-red-100 bg-red-50 px-4 py-2 text-sm text-red-700">
+      Failed to send: {error}
+    </div>
+  );
+
+  // ---- Media preview mode ----
+  if (pendingFile) {
+    const kb = Math.round(pendingFile.size / 1024);
+    return (
+      <div className="border-t bg-white">
+        {errorBanner}
+        <div className="p-3">
+          <div className="flex items-start gap-3 rounded-xl border bg-gray-50 p-3">
+            {previewUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={previewUrl} alt="" className="h-20 w-20 flex-none rounded-lg object-cover" />
+            ) : (
+              <div className="flex h-20 w-20 flex-none items-center justify-center rounded-lg bg-white text-3xl">
+                📄
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium text-gray-800">{pendingFile.name}</div>
+              <div className="text-xs text-gray-400">
+                {kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} KB`}
+              </div>
+            </div>
+            <button
+              onClick={cancelMedia}
+              disabled={sending}
+              title="Remove"
+              className="flex h-8 w-8 flex-none items-center justify-center rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-600"
+            >
+              <IconClose />
+            </button>
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  confirmMedia();
+                }
+              }}
+              placeholder="Add a caption (optional)"
+              className="flex-1 rounded-full border border-gray-300 px-4 py-2 focus:border-brand focus:outline-none"
+            />
+            <button
+              onClick={cancelMedia}
+              disabled={sending}
+              className="rounded-full px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmMedia}
+              disabled={sending}
+              className="flex items-center gap-2 rounded-full bg-brand px-5 py-2 text-sm font-medium text-white transition hover:bg-brand-dark disabled:opacity-50"
+            >
+              <IconSend width={16} height={16} />
+              {sending ? 'Sending…' : 'Send'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Normal text mode ----
   return (
     <div className="border-t bg-white">
-      {error && (
-        <div className="border-b border-red-100 bg-red-50 px-4 py-2 text-sm text-red-700">
-          Failed to send: {error}
-        </div>
-      )}
+      {errorBanner}
       {showCanned && (
         <div className="max-h-40 overflow-y-auto border-b p-2">
           {(cannedQuery.data ?? []).length === 0 && (
