@@ -1,0 +1,8 @@
+[Unit]
+Description=Neuro Recode WhatsApp — Postgres + MinIO backup
+Wants=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/neuro-recode-whatsapp/infra/backup.sh

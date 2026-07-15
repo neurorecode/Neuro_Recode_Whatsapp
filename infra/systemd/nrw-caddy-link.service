@@ -1,0 +1,8 @@
+[Unit]
+Description=Neuro Recode WhatsApp — ensure Caddy is linked to our network
+Wants=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/neuro-recode-whatsapp/infra/ensure-caddy-link.sh
