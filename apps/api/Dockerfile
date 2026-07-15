@@ -29,5 +29,6 @@ COPY --from=build /app ./
 WORKDIR /app
 EXPOSE 4000
 # Sync the schema (scaffold uses db push; switch to `prisma migrate deploy`
-# once migration files exist) then boot the API.
-CMD ["sh", "-c", "node_modules/.bin/prisma db push --schema=packages/db/prisma/schema.prisma --skip-generate && node apps/api/dist/main.js"]
+# once migration files exist) then boot the API. The prisma CLI bin lives in the
+# db package's node_modules (pnpm does not hoist it to the repo root).
+CMD ["sh", "-c", "packages/db/node_modules/.bin/prisma db push --schema=packages/db/prisma/schema.prisma --skip-generate && node apps/api/dist/main.js"]
