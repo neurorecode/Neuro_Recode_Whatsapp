@@ -80,15 +80,15 @@ pnpm --filter @nrw/api dev      # http://localhost:4000
 pnpm --filter @nrw/web dev      # http://localhost:3000
 ```
 
-## Connect the Meta webhook
+## Deploy to the VPS + connect the Meta webhook
 
-Meta must reach a **public HTTPS** URL. On the VPS, point your Hostinger domain
-(e.g. `chat.neurorecode.com`) at the server, obtain TLS via certbot, then set the
-callback URL to `https://<domain>/webhooks/whatsapp` and subscribe to the `messages`
-field. For local development, expose port 4000 with a tunnel or use the WABA test number.
+See **[DEPLOY.md](./DEPLOY.md)** for the full step-by-step: point DNS, install Docker,
+issue TLS with the one-command `infra/init-letsencrypt.sh`, bring the stack up, then set
+the Meta callback URL to `https://<domain>/webhooks/whatsapp` (with your verify token) and
+subscribe to the `messages` field.
 
-Verify the handshake succeeds (Meta shows **Verified**), send a message to your number,
-and watch it appear live in the inbox.
+Once Verified, send a message to your number and watch it appear live in the inbox. For
+local development, expose port 4000 with a tunnel or use the WABA test number.
 
 ## Tests
 

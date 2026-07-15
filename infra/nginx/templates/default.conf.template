@@ -1,7 +1,6 @@
-# Reverse proxy for Neuro Recode WhatsApp.
-# Replace `chat.neurorecode.com` with your Hostinger domain/subdomain.
-# For TLS, run certbot to place fullchain.pem/privkey.pem under ./certs and
-# switch the server block to listen on 443 (template shown below).
+# Rendered by the nginx image's envsubst at startup: ${DOMAIN} is replaced from
+# the DOMAIN env var; nginx runtime vars ($host, $http_upgrade, ...) are left
+# untouched. See docker-compose.yml (nginx.environment.DOMAIN).
 
 upstream nrw_api {
   server api:4000;
@@ -10,13 +9,32 @@ upstream nrw_web {
   server web:3000;
 }
 
+# ---- HTTP: serve ACME challenge, redirect everything else to HTTPS ----
 server {
   listen 80;
-  server_name chat.neurorecode.com;
+  server_name ${DOMAIN};
+
+  location /.well-known/acme-challenge/ {
+    root /var/www/certbot;
+  }
+
+  location / {
+    return 301 https://$host$request_uri;
+  }
+}
+
+# ---- HTTPS ----
+server {
+  listen 443 ssl;
+  http2 on;
+  server_name ${DOMAIN};
+
+  ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
 
   client_max_body_size 25m;
 
-  # WhatsApp webhook (Meta calls GET to verify, POST for events)
+  # WhatsApp webhook — Meta calls GET to verify, POST for events
   location /webhooks/ {
     proxy_pass http://nrw_api;
     proxy_set_header Host $host;
@@ -36,15 +54,18 @@ server {
 
   location /health {
     proxy_pass http://nrw_api;
+    proxy_set_header Host $host;
   }
 
-  # Socket.IO (agent namespace) — needs WebSocket upgrade
-  location /agent/ {
+  # Socket.IO transport (engine.io uses the /socket.io/ path; the /agent
+  # namespace is negotiated in the handshake, not the URL).
+  location /socket.io/ {
     proxy_pass http://nrw_api;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
     proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
     proxy_read_timeout 3600s;
   }
 
@@ -58,16 +79,3 @@ server {
     proxy_set_header X-Forwarded-Proto $scheme;
   }
 }
-
-# ---------------------------------------------------------------------------
-# TLS template (enable after obtaining certs via certbot):
-#
-# server {
-#   listen 443 ssl http2;
-#   server_name chat.neurorecode.com;
-#   ssl_certificate     /etc/nginx/certs/fullchain.pem;
-#   ssl_certificate_key /etc/nginx/certs/privkey.pem;
-#   ... (same location blocks as above) ...
-# }
-# server { listen 80; server_name chat.neurorecode.com; return 301 https://$host$request_uri; }
-# ---------------------------------------------------------------------------
