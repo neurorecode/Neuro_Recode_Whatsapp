@@ -3,7 +3,7 @@ FROM node:22-slim AS build
 RUN corepack enable
 WORKDIR /app
 
-COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/
 COPY apps/web/package.json apps/web/
 RUN pnpm install --frozen-lockfile=false
