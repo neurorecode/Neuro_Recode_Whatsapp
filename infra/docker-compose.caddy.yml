@@ -1,0 +1,15 @@
+# Overlay for a VPS where Caddy (static Caddyfile) is the front proxy on 80/443
+# (e.g. sharing the host with another app). Our stack publishes NO host ports;
+# Caddy reverse-proxies to our containers by name.
+#
+# Usage (from infra/):
+#   docker compose -f docker-compose.yml -f docker-compose.caddy.yml up -d --build
+#
+# Then connect the Caddy container to our network so it can resolve nrw-web /
+# nrw-api, add the site block from infra/caddy/whatsappchat.Caddyfile to the
+# host Caddyfile, and reload Caddy. See DEPLOY.md ("behind an existing Caddy").
+services:
+  api:
+    container_name: nrw-api
+  web:
+    container_name: nrw-web

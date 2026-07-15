@@ -164,6 +164,35 @@ network `frappe_docker_default`. If yours differ, edit `docker-compose.traefik.y
 (the `traefik.*` labels and the `edge` network name). Continue at **Step 8** to wire the
 Meta webhook.
 
+## Alternative: deploy behind an existing Caddy (static Caddyfile)
+
+If the VPS already runs Caddy on 80/443 (front proxy for another app), ride it —
+our stack publishes no host ports. Skip Step 6.
+
+1. Point DNS: `whatsappchat.neurorecode.in` A record → **this** VPS's public IP
+   (`curl -4 ifconfig.me`). Confirm with `dig +short whatsappchat.neurorecode.in`.
+2. In `.env`, set the three URLs to `https://<domain>`; ensure `infra/.env` symlink exists.
+3. Start our stack (no proxy, no host ports; containers named `nrw-web` / `nrw-api`):
+   ```bash
+   cd infra
+   docker compose -f docker-compose.yml -f docker-compose.caddy.yml up -d --build
+   ```
+4. Connect the Caddy container to our network so it can resolve our containers
+   (replace `neu-ai-web-1` with your Caddy container name):
+   ```bash
+   docker network connect infra_default neu-ai-web-1
+   ```
+5. Append `infra/caddy/whatsappchat.Caddyfile` to the host Caddyfile
+   (find it via `docker inspect <caddy> --format '{{json .Mounts}}'`), then reload:
+   ```bash
+   docker exec neu-ai-web-1 caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+   ```
+   Caddy obtains the TLS cert automatically. Then `curl https://<domain>/health`.
+
+Note: the `docker network connect` is lost if the Caddy stack is recreated. To make
+it permanent, add our network to that stack's compose (or a shared external network).
+Continue at **Step 8** for the Meta webhook.
+
 ## Troubleshooting
 
 - **Webhook won't verify (Meta shows an error):**

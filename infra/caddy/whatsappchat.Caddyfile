@@ -1,0 +1,29 @@
+# Append this block to the host Caddyfile (e.g. /root/Neu-Ai/deploy/Caddyfile),
+# then reload Caddy:
+#   docker exec neu-ai-web-1 caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+#
+# Prereqs:
+#   - DNS: whatsappchat.neurorecode.in -> THIS VPS public IP
+#   - Caddy joined to our network:  docker network connect infra_default neu-ai-web-1
+#   - Our stack running with the caddy overlay (containers nrw-web / nrw-api)
+# Caddy obtains + renews the TLS cert automatically.
+
+whatsappchat.neurorecode.in {
+	# API + webhooks + realtime -> NestJS (nrw-api:4000)
+	handle /api/* {
+		reverse_proxy nrw-api:4000
+	}
+	handle /webhooks/* {
+		reverse_proxy nrw-api:4000
+	}
+	handle /socket.io/* {
+		reverse_proxy nrw-api:4000
+	}
+	handle /health {
+		reverse_proxy nrw-api:4000
+	}
+	# Everything else -> Next.js web app (nrw-web:3000)
+	handle {
+		reverse_proxy nrw-web:3000
+	}
+}
