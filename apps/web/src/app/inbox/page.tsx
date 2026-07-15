@@ -14,7 +14,8 @@ import { ConversationHeader } from '@/components/ConversationHeader';
 import { ContactPanel } from '@/components/ContactPanel';
 import { NotesPanel } from '@/components/NotesPanel';
 import { NewChatModal } from '@/components/NewChatModal';
-import { AppNav } from '@/components/AppNav';
+import { AppSidebar } from '@/components/AppSidebar';
+import { PageHeader } from '@/components/PageHeader';
 
 export default function InboxPage() {
   const router = useRouter();
@@ -131,92 +132,99 @@ export default function InboxPage() {
   }
 
   return (
-    <main className="flex h-screen flex-col">
-      <AppNav />
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <aside className="glass flex w-96 flex-none flex-col border-r border-white/40">
-          <div className="space-y-2 border-b border-white/40 bg-white/20 px-3 py-2">
-            <div className="flex items-center gap-2">
+    <div className="flex h-screen">
+      <AppSidebar />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <PageHeader
+          title="Inbox"
+          actions={
+            <button
+              onClick={() => setShowNewChat(true)}
+              className="rounded-full bg-gradient-to-r from-brand to-brand-dark px-4 py-2 text-sm font-medium text-white shadow-md shadow-brand/30 transition hover:shadow-brand/40"
+            >
+              + New chat
+            </button>
+          }
+        />
+        <div className="flex flex-1 gap-4 overflow-hidden px-6 pb-6">
+          {/* Conversation list card */}
+          <aside className="glass-card flex w-80 flex-none flex-col overflow-hidden rounded-3xl">
+            <div className="space-y-2 border-b border-white/40 bg-white/20 px-3 py-3">
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search name or number…"
-                className="glass-input flex-1 rounded-xl px-3 py-1.5 text-sm"
+                className="glass-input w-full rounded-xl px-3 py-2 text-sm"
               />
-              <button
-                onClick={() => setShowNewChat(true)}
-                title="Start a new conversation"
-                className="flex-none rounded-xl bg-gradient-to-r from-brand to-brand-dark px-3 py-1.5 text-sm font-medium text-white shadow-md shadow-brand/30 transition hover:shadow-brand/40"
-              >
-                + New
-              </button>
+              <div className="flex items-center gap-1 text-xs">
+                {(['all', 'open', 'pending', 'closed'] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setStatusFilter(s)}
+                    className={`rounded-full px-2.5 py-1 capitalize transition ${
+                      statusFilter === s
+                        ? 'bg-gradient-to-r from-brand to-brand-dark text-white shadow-sm'
+                        : 'text-gray-500 hover:bg-white/50'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+                <label className="ml-auto flex items-center gap-1 text-gray-500">
+                  <input
+                    type="checkbox"
+                    checked={mineOnly}
+                    onChange={(e) => setMineOnly(e.target.checked)}
+                  />
+                  Mine
+                </label>
+              </div>
             </div>
-            <div className="flex items-center gap-1 text-xs">
-              {(['all', 'open', 'pending', 'closed'] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setStatusFilter(s)}
-                  className={`rounded-full px-2 py-0.5 capitalize ${
-                    statusFilter === s ? 'bg-brand text-white' : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-              <label className="ml-auto flex items-center gap-1 text-gray-600">
-                <input
-                  type="checkbox"
-                  checked={mineOnly}
-                  onChange={(e) => setMineOnly(e.target.checked)}
-                />
-                Mine
-              </label>
-            </div>
-          </div>
-          <ConversationList
-            conversations={conversations}
-            selectedId={selected?.id ?? null}
-            onSelect={onSelect}
-          />
-        </aside>
+            <ConversationList
+              conversations={conversations}
+              selectedId={selected?.id ?? null}
+              onSelect={onSelect}
+            />
+          </aside>
 
-        {/* Thread */}
-        <section className="flex flex-1 flex-col">
-          {selected ? (
-            <>
-              <ConversationHeader
-                conversation={selected}
-                onUpdated={() => queryClient.invalidateQueries({ queryKey: ['conversations'] })}
-                infoOpen={panel === 'info'}
-                notesOpen={panel === 'notes'}
-                onToggleInfo={() => setPanel((p) => (p === 'info' ? null : 'info'))}
-                onToggleNotes={() => setPanel((p) => (p === 'notes' ? null : 'notes'))}
-              />
-              <MessageThread messages={messages} />
-              <Composer
-                disabled={false}
-                windowOpen={selected.windowOpen}
-                onSend={onSend}
-                onSendMedia={onSendMedia}
-              />
-            </>
-          ) : (
-            <div className="flex flex-1 items-center justify-center text-gray-400">
-              Select a conversation to start
-            </div>
+          {/* Thread card */}
+          <section className="glass-card flex flex-1 flex-col overflow-hidden rounded-3xl">
+            {selected ? (
+              <>
+                <ConversationHeader
+                  conversation={selected}
+                  onUpdated={() => queryClient.invalidateQueries({ queryKey: ['conversations'] })}
+                  infoOpen={panel === 'info'}
+                  notesOpen={panel === 'notes'}
+                  onToggleInfo={() => setPanel((p) => (p === 'info' ? null : 'info'))}
+                  onToggleNotes={() => setPanel((p) => (p === 'notes' ? null : 'notes'))}
+                />
+                <MessageThread messages={messages} />
+                <Composer
+                  disabled={false}
+                  windowOpen={selected.windowOpen}
+                  onSend={onSend}
+                  onSendMedia={onSendMedia}
+                />
+              </>
+            ) : (
+              <div className="flex flex-1 items-center justify-center text-gray-400">
+                Select a conversation to start
+              </div>
+            )}
+          </section>
+
+          {selected && panel === 'info' && (
+            <ContactPanel
+              contact={selected.contact}
+              onUpdated={() => queryClient.invalidateQueries({ queryKey: ['conversations'] })}
+              onClose={() => setPanel(null)}
+            />
           )}
-        </section>
-        {selected && panel === 'info' && (
-          <ContactPanel
-            contact={selected.contact}
-            onUpdated={() => queryClient.invalidateQueries({ queryKey: ['conversations'] })}
-            onClose={() => setPanel(null)}
-          />
-        )}
-        {selected && panel === 'notes' && (
-          <NotesPanel conversationId={selected.id} onClose={() => setPanel(null)} />
-        )}
+          {selected && panel === 'notes' && (
+            <NotesPanel conversationId={selected.id} onClose={() => setPanel(null)} />
+          )}
+        </div>
       </div>
       {showNewChat && (
         <NewChatModal
@@ -228,6 +236,6 @@ export default function InboxPage() {
           }}
         />
       )}
-    </main>
+    </div>
   );
 }

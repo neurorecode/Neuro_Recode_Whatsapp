@@ -10,12 +10,13 @@ body,
 
 body {
   @apply text-gray-800 antialiased;
-  /* Ambient gradient built from the brand palette (teal / green) */
+  /* Soft, light textured canvas with faint brand glows + a light streak */
   background:
-    radial-gradient(1100px 620px at 8% -10%, rgba(37, 211, 102, 0.18), transparent 60%),
-    radial-gradient(1000px 520px at 100% 0%, rgba(18, 140, 126, 0.22), transparent 55%),
-    radial-gradient(900px 760px at 50% 120%, rgba(7, 94, 84, 0.16), transparent 60%),
-    linear-gradient(135deg, #e9f6f1 0%, #eef3f2 45%, #e8f4ef 100%);
+    radial-gradient(1000px 520px at 88% 6%, rgba(255, 255, 255, 0.7), transparent 60%),
+    radial-gradient(760px 520px at 10% 4%, rgba(37, 211, 102, 0.1), transparent 55%),
+    radial-gradient(900px 760px at 50% 116%, rgba(18, 140, 126, 0.1), transparent 60%),
+    conic-gradient(from 210deg at 20% 30%, rgba(18, 140, 126, 0.05), transparent 25%),
+    linear-gradient(120deg, #eef2f0 0%, #f3f5f4 45%, #edf3f1 100%);
   background-attachment: fixed;
 }
 

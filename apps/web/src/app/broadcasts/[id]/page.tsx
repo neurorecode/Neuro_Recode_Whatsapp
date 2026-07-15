@@ -5,7 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import type { BroadcastDetail } from '@nrw/shared';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/useRequireAuth';
-import { AppNav } from '@/components/AppNav';
+import { AppSidebar } from '@/components/AppSidebar';
+import { PageHeader } from '@/components/PageHeader';
 
 function StatusPill({ status }: { status: string }) {
   const color =
@@ -32,26 +33,24 @@ export default function BroadcastDetailPage({ params }: { params: { id: string }
   const b = query.data;
 
   return (
-    <main className="flex h-screen flex-col">
-      <AppNav />
-      <div className="mx-auto w-full max-w-4xl flex-1 overflow-y-auto p-6">
-        <Link href="/broadcasts" className="text-sm text-brand hover:underline">
-          ← Back to broadcasts
-        </Link>
+    <div className="flex h-screen">
+      <AppSidebar />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <PageHeader
+          title={b?.name ?? 'Broadcast'}
+          subtitle={
+            b ? `Template ${b.template.name} (${b.template.language}) · ${b.status}` : undefined
+          }
+        />
+        <div className="flex-1 overflow-y-auto px-8 pb-8">
+          <Link href="/broadcasts" className="text-sm text-brand hover:underline">
+            ← Back to broadcasts
+          </Link>
 
-        {!b ? (
-          <div className="mt-6 text-gray-400">Loading…</div>
-        ) : (
-          <>
-            <div className="mb-4 mt-2 flex items-center justify-between">
-              <div>
-                <h1 className="text-xl font-semibold">{b.name}</h1>
-                <p className="text-sm text-gray-500">
-                  Template <span className="font-medium">{b.template.name}</span> ({b.template.language}) ·{' '}
-                  <span className="capitalize">{b.status}</span>
-                </p>
-              </div>
-            </div>
+          {!b ? (
+            <div className="mt-6 text-gray-400">Loading…</div>
+          ) : (
+            <>
 
             <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
               {(['total', 'sent', 'delivered', 'read', 'failed'] as const).map((k) => (
@@ -88,9 +87,10 @@ export default function BroadcastDetailPage({ params }: { params: { id: string }
                 </tbody>
               </table>
             </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

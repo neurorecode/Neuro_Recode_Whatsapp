@@ -85,7 +85,7 @@ export function Composer({
 
   if (!windowOpen) {
     return (
-      <div className="glass border-t border-white/40 p-3 text-center text-sm text-amber-800">
+      <div className="border-t border-white/40 bg-amber-50/50 p-3 text-center text-sm text-amber-800">
         The 24-hour service window has closed — send an approved template (from Templates /
         Broadcasts) to re-engage this contact.
       </div>
@@ -102,7 +102,7 @@ export function Composer({
   if (pendingFile) {
     const kb = Math.round(pendingFile.size / 1024);
     return (
-      <div className="glass border-t border-white/40">
+      <div className="border-t border-white/40 bg-white/30">
         {errorBanner}
         <div className="p-3">
           <div className="flex items-start gap-3 rounded-2xl border border-white/50 bg-white/50 p-3 backdrop-blur">
@@ -165,7 +165,7 @@ export function Composer({
 
   // ---- Normal text mode ----
   return (
-    <div className="glass border-t border-white/40">
+    <div className="border-t border-white/40 bg-white/30">
       {errorBanner}
       {showCanned && (
         <div className="max-h-40 overflow-y-auto border-b p-2">

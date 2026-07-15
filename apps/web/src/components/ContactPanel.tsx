@@ -42,7 +42,7 @@ export function ContactPanel({
   }
 
   return (
-    <aside className="glass flex w-80 flex-none flex-col border-l border-white/40">
+    <aside className="glass-card flex w-80 flex-none flex-col overflow-hidden rounded-3xl">
       <header className="flex items-center justify-between border-b px-4 py-3">
         <span className="text-sm font-semibold text-gray-700">Contact details</span>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600">

@@ -6,7 +6,8 @@ import type { AgentDto, CannedResponseDto } from '@nrw/shared';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/useRequireAuth';
 import { useAuth } from '@/lib/auth';
-import { AppNav } from '@/components/AppNav';
+import { AppSidebar } from '@/components/AppSidebar';
+import { PageHeader } from '@/components/PageHeader';
 
 function AgentsSection({ isAdmin }: { isAdmin: boolean }) {
   const queryClient = useQueryClient();
@@ -175,12 +176,15 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="flex h-screen flex-col">
-      <AppNav />
-      <div className="mx-auto grid w-full max-w-5xl flex-1 gap-6 overflow-y-auto p-6 md:grid-cols-2">
-        <AgentsSection isAdmin={agent?.role === 'admin'} />
-        <CannedSection />
+    <div className="flex h-screen">
+      <AppSidebar />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <PageHeader title="Settings" subtitle="Manage agents and quick replies." />
+        <div className="grid flex-1 gap-6 overflow-y-auto px-8 pb-8 md:grid-cols-2">
+          <AgentsSection isAdmin={agent?.role === 'admin'} />
+          <CannedSection />
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

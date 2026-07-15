@@ -7,7 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 import type { BroadcastListItem, TemplateDto } from '@nrw/shared';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/useRequireAuth';
-import { AppNav } from '@/components/AppNav';
+import { AppSidebar } from '@/components/AppSidebar';
+import { PageHeader } from '@/components/PageHeader';
 
 export default function BroadcastsPage() {
   const { ready } = useRequireAuth();
@@ -75,11 +76,16 @@ export default function BroadcastsPage() {
   const broadcasts = broadcastsQuery.data ?? [];
 
   return (
-    <main className="flex h-screen flex-col">
-      <AppNav />
-      <div className="mx-auto grid w-full max-w-6xl flex-1 gap-6 overflow-y-auto p-6 md:grid-cols-2">
+    <div className="flex h-screen">
+      <AppSidebar />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <PageHeader
+          title="Broadcasts"
+          subtitle="Send an approved template to opted-in contacts, filtered by tag."
+        />
+        <div className="grid flex-1 gap-6 overflow-y-auto px-8 pb-8 md:grid-cols-2">
         {/* Create */}
-        <section className="glass-card rounded-2xl p-5">
+        <section className="glass-card rounded-3xl p-5">
           <h1 className="mb-1 text-lg font-semibold">New broadcast</h1>
           <p className="mb-4 text-sm text-gray-500">
             Send an approved template to opted-in contacts, filtered by tag.
@@ -184,7 +190,7 @@ export default function BroadcastsPage() {
         </section>
 
         {/* History */}
-        <section className="glass-card rounded-2xl p-5">
+        <section className="glass-card rounded-3xl p-5">
           <h2 className="mb-3 text-lg font-semibold">Broadcasts</h2>
           <div className="space-y-2">
             {broadcasts.length === 0 && (
@@ -208,7 +214,8 @@ export default function BroadcastsPage() {
             ))}
           </div>
         </section>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

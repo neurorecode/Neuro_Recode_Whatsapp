@@ -5,7 +5,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { TemplateDto } from '@nrw/shared';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/useRequireAuth';
-import { AppNav } from '@/components/AppNav';
+import { AppSidebar } from '@/components/AppSidebar';
+import { PageHeader } from '@/components/PageHeader';
 import { IconClose } from '@/components/icons';
 
 function highlightVars(text: string) {
@@ -94,34 +95,30 @@ export default function TemplatesPage() {
   const templates = templatesQuery.data ?? [];
 
   return (
-    <main className="flex h-screen flex-col">
-      <AppNav />
-      <div className="mx-auto w-full max-w-5xl flex-1 overflow-y-auto p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold">Message Templates</h1>
-            <p className="text-sm text-gray-500">
-              Approved templates synced from your WhatsApp Business account. Click any row to
-              preview the full message. Create &amp; submit new templates in Meta Business
-              Manager, then sync here.
-            </p>
-          </div>
-          <button
-            onClick={() => sync.mutate()}
-            disabled={sync.isPending}
-            className="rounded-xl bg-gradient-to-r from-brand to-brand-dark px-4 py-2 text-sm font-medium text-white shadow-md shadow-brand/30 transition hover:shadow-brand/40 disabled:opacity-60"
-          >
-            {sync.isPending ? 'Syncing…' : 'Sync from Meta'}
-          </button>
-        </div>
+    <div className="flex h-screen">
+      <AppSidebar />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <PageHeader
+          title="Templates"
+          subtitle="Approved templates synced from WhatsApp. Click a row to preview."
+          actions={
+            <button
+              onClick={() => sync.mutate()}
+              disabled={sync.isPending}
+              className="rounded-full bg-gradient-to-r from-brand to-brand-dark px-4 py-2 text-sm font-medium text-white shadow-md shadow-brand/30 transition hover:shadow-brand/40 disabled:opacity-60"
+            >
+              {sync.isPending ? 'Syncing…' : 'Sync from Meta'}
+            </button>
+          }
+        />
+        <div className="flex-1 overflow-y-auto px-8 pb-8">
+          {sync.isError && (
+            <div className="mb-3 rounded-lg bg-red-50 p-2 text-sm text-red-700">
+              {(sync.error as Error).message}
+            </div>
+          )}
 
-        {sync.isError && (
-          <div className="mb-3 rounded bg-red-50 p-2 text-sm text-red-700">
-            {(sync.error as Error).message}
-          </div>
-        )}
-
-        <div className="overflow-hidden glass-card rounded-2xl">
+          <div className="glass-card overflow-hidden rounded-3xl">
           <table className="w-full text-left text-sm">
             <thead className="bg-white/40 text-xs uppercase text-gray-500">
               <tr>
@@ -161,9 +158,10 @@ export default function TemplatesPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
       {preview && <TemplatePreview t={preview} onClose={() => setPreview(null)} />}
-    </main>
+    </div>
   );
 }
