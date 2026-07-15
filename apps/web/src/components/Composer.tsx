@@ -1,6 +1,9 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import type { CannedResponseDto } from '@nrw/shared';
+import { api } from '@/lib/api';
 
 export function Composer({
   disabled,
@@ -16,7 +19,14 @@ export function Composer({
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCanned, setShowCanned] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const cannedQuery = useQuery({
+    queryKey: ['canned'],
+    queryFn: () => api.get<CannedResponseDto[]>('/canned'),
+    staleTime: 60000,
+  });
 
   async function submit() {
     const body = text.trim();
@@ -65,6 +75,29 @@ export function Composer({
           Failed to send: {error}
         </div>
       )}
+      {showCanned && (
+        <div className="max-h-40 overflow-y-auto border-b p-2">
+          {(cannedQuery.data ?? []).length === 0 && (
+            <p className="px-2 py-1 text-xs text-gray-400">
+              No saved replies yet — add some in Settings.
+            </p>
+          )}
+          {(cannedQuery.data ?? []).map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => {
+                setText(c.body);
+                setShowCanned(false);
+              }}
+              className="block w-full truncate rounded px-2 py-1 text-left text-sm hover:bg-gray-100"
+            >
+              <span className="font-medium">{c.title}</span>{' '}
+              <span className="text-gray-400">— {c.body.slice(0, 50)}</span>
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex items-center gap-2 p-3">
         <input
           ref={fileInputRef}
@@ -81,6 +114,14 @@ export function Composer({
           className="flex h-10 w-10 flex-none items-center justify-center rounded-full text-xl text-gray-500 hover:bg-gray-100 disabled:opacity-50"
         >
           📎
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowCanned((v) => !v)}
+          title="Quick replies"
+          className="flex h-10 w-10 flex-none items-center justify-center rounded-full text-xl text-gray-500 hover:bg-gray-100"
+        >
+          💬
         </button>
         <input
           value={text}

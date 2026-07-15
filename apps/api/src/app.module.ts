@@ -10,6 +10,8 @@ import { MessagesModule } from './messages/messages.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { TemplatesModule } from './templates/templates.module';
 import { BroadcastsModule } from './broadcasts/broadcasts.module';
+import { AgentsModule } from './agents/agents.module';
+import { CannedModule } from './canned/canned.module';
 import { MediaModule } from './media/media.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { HealthController } from './health.controller';
@@ -27,6 +29,8 @@ import { HealthController } from './health.controller';
     ContactsModule,
     TemplatesModule,
     BroadcastsModule,
+    AgentsModule,
+    CannedModule,
     WhatsappModule,
   ],
   controllers: [HealthController],

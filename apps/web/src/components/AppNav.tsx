@@ -9,6 +9,7 @@ const LINKS = [
   { href: '/inbox', label: 'Inbox' },
   { href: '/templates', label: 'Templates' },
   { href: '/broadcasts', label: 'Broadcasts' },
+  { href: '/settings', label: 'Settings' },
 ];
 
 export function AppNav() {

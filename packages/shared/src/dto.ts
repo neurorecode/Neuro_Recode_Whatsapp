@@ -31,12 +31,32 @@ export interface ContactDto {
 export interface ConversationListItem {
   id: string;
   status: 'open' | 'pending' | 'closed';
+  priority: 'low' | 'normal' | 'high' | 'urgent';
   unreadCount: number;
   lastMessageAt: string | null;
   lastMessageText: string | null;
   assigneeAgentId: string | null;
   contact: ContactDto;
   windowOpen: boolean;
+}
+
+export interface InternalNoteDto {
+  id: string;
+  body: string;
+  agentName: string;
+  createdAt: string;
+}
+
+export interface CannedResponseDto {
+  id: string;
+  title: string;
+  body: string;
+}
+
+export interface UpdateTicketRequest {
+  assigneeAgentId?: string | null;
+  status?: 'open' | 'pending' | 'closed';
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
 }
 
 export interface MessageDto {

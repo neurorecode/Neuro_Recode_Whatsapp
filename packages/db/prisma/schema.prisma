@@ -187,6 +187,16 @@ model Message {
   @@index([timestamp])
 }
 
+model CannedResponse {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  createdBy String?
+  createdAt DateTime @default(now())
+
+  @@index([title])
+}
+
 model InternalNote {
   id             String       @id @default(cuid())
   conversationId String

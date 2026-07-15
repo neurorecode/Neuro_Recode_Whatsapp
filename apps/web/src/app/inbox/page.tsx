@@ -11,6 +11,8 @@ import { ConversationList } from '@/components/ConversationList';
 import { MessageThread } from '@/components/MessageThread';
 import { Composer } from '@/components/Composer';
 import { ContactControls } from '@/components/ContactControls';
+import { TicketControls } from '@/components/TicketControls';
+import { NotesPanel } from '@/components/NotesPanel';
 import { AppNav } from '@/components/AppNav';
 
 export default function InboxPage() {
@@ -18,6 +20,10 @@ export default function InboxPage() {
   const { token, hydrated } = useAuth();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<ConversationListItem | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'pending' | 'closed'>('all');
+  const [mineOnly, setMineOnly] = useState(false);
+  const [search, setSearch] = useState('');
+  const [showNotes, setShowNotes] = useState(false);
 
   // Auth guard
   useEffect(() => {
@@ -25,8 +31,15 @@ export default function InboxPage() {
   }, [hydrated, token, router]);
 
   const conversationsQuery = useQuery({
-    queryKey: ['conversations'],
-    queryFn: () => api.get<ConversationListItem[]>('/conversations'),
+    queryKey: ['conversations', statusFilter, mineOnly, search],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (mineOnly) params.set('assignee', 'me');
+      if (search.trim()) params.set('q', search.trim());
+      const qs = params.toString();
+      return api.get<ConversationListItem[]>(`/conversations${qs ? `?${qs}` : ''}`);
+    },
     enabled: !!token,
     refetchInterval: 30000,
   });
@@ -113,9 +126,35 @@ export default function InboxPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside className="flex w-96 flex-none flex-col border-r bg-white">
-          <header className="border-b bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-600">
-            Conversations
-          </header>
+          <div className="space-y-2 border-b bg-gray-50 px-3 py-2">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search name or number…"
+              className="w-full rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
+            />
+            <div className="flex items-center gap-1 text-xs">
+              {(['all', 'open', 'pending', 'closed'] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className={`rounded-full px-2 py-0.5 capitalize ${
+                    statusFilter === s ? 'bg-brand text-white' : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+              <label className="ml-auto flex items-center gap-1 text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={mineOnly}
+                  onChange={(e) => setMineOnly(e.target.checked)}
+                />
+                Mine
+              </label>
+            </div>
+          </div>
           <ConversationList
             conversations={conversations}
             selectedId={selected?.id ?? null}
@@ -142,14 +181,34 @@ export default function InboxPage() {
                     )}
                   </div>
                 </div>
-                <ContactControls
-                  contactId={selected.contact.id}
-                  tags={selected.contact.tags}
-                  optInStatus={selected.contact.optInStatus}
-                  onUpdated={() =>
-                    queryClient.invalidateQueries({ queryKey: ['conversations'] })
-                  }
-                />
+                <div className="flex flex-col items-end gap-1">
+                  <TicketControls
+                    conversationId={selected.id}
+                    status={selected.status}
+                    assigneeAgentId={selected.assigneeAgentId}
+                    onUpdated={() =>
+                      queryClient.invalidateQueries({ queryKey: ['conversations'] })
+                    }
+                  />
+                  <div className="flex items-center gap-2">
+                    <ContactControls
+                      contactId={selected.contact.id}
+                      tags={selected.contact.tags}
+                      optInStatus={selected.contact.optInStatus}
+                      onUpdated={() =>
+                        queryClient.invalidateQueries({ queryKey: ['conversations'] })
+                      }
+                    />
+                    <button
+                      onClick={() => setShowNotes((v) => !v)}
+                      className={`rounded px-2 py-0.5 text-xs ${
+                        showNotes ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-800'
+                      }`}
+                    >
+                      Notes
+                    </button>
+                  </div>
+                </div>
               </header>
               <MessageThread messages={messages} />
               <Composer
@@ -165,6 +224,7 @@ export default function InboxPage() {
             </div>
           )}
         </section>
+        {selected && showNotes && <NotesPanel conversationId={selected.id} />}
       </div>
     </main>
   );
