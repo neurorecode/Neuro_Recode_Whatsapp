@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { IsIn, IsOptional, IsString, MinLength } from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ConversationsService } from './conversations.service';
@@ -63,6 +74,11 @@ export class ConversationsController {
   @Post(':id/notes')
   addNote(@Param('id') id: string, @Body() dto: AddNoteDto, @Request() req: any) {
     return this.conversations.addNote(id, req.user.id, dto.body);
+  }
+
+  @Delete(':id/notes/:noteId')
+  deleteNote(@Param('id') id: string, @Param('noteId') noteId: string) {
+    return this.conversations.deleteNote(id, noteId).then(() => ({ ok: true }));
   }
 
   @Post(':id/read')

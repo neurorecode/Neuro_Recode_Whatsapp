@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { CannedResponseDto } from '@nrw/shared';
 import { api } from '@/lib/api';
+import { IconPaperclip, IconReply, IconSend } from './icons';
 
 export function Composer({
   disabled,
@@ -111,17 +112,19 @@ export function Composer({
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || sending}
           title="Attach file"
-          className="flex h-10 w-10 flex-none items-center justify-center rounded-full text-xl text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+          className="flex h-10 w-10 flex-none items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
         >
-          📎
+          <IconPaperclip width={20} height={20} />
         </button>
         <button
           type="button"
           onClick={() => setShowCanned((v) => !v)}
           title="Quick replies"
-          className="flex h-10 w-10 flex-none items-center justify-center rounded-full text-xl text-gray-500 hover:bg-gray-100"
+          className={`flex h-10 w-10 flex-none items-center justify-center rounded-full transition hover:bg-gray-100 ${
+            showCanned ? 'text-brand' : 'text-gray-500 hover:text-gray-700'
+          }`}
         >
-          💬
+          <IconReply width={20} height={20} />
         </button>
         <input
           value={text}
@@ -139,9 +142,10 @@ export function Composer({
         <button
           onClick={submit}
           disabled={disabled || sending || !text.trim()}
-          className="rounded-full bg-brand px-5 py-2 font-medium text-white hover:bg-brand-dark disabled:opacity-50"
+          title="Send"
+          className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-brand text-white transition hover:bg-brand-dark disabled:opacity-50"
         >
-          {sending ? '…' : 'Send'}
+          <IconSend width={18} height={18} />
         </button>
       </div>
     </div>

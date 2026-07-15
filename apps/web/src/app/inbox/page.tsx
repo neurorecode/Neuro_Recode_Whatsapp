@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ConversationListItem, MessageDto } from '@nrw/shared';
@@ -10,8 +10,8 @@ import { getSocket, disconnectSocket } from '@/lib/socket';
 import { ConversationList } from '@/components/ConversationList';
 import { MessageThread } from '@/components/MessageThread';
 import { Composer } from '@/components/Composer';
-import { ContactControls } from '@/components/ContactControls';
-import { TicketControls } from '@/components/TicketControls';
+import { ConversationHeader } from '@/components/ConversationHeader';
+import { ContactPanel } from '@/components/ContactPanel';
 import { NotesPanel } from '@/components/NotesPanel';
 import { AppNav } from '@/components/AppNav';
 
@@ -23,7 +23,7 @@ export default function InboxPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'pending' | 'closed'>('all');
   const [mineOnly, setMineOnly] = useState(false);
   const [search, setSearch] = useState('');
-  const [showNotes, setShowNotes] = useState(false);
+  const [panel, setPanel] = useState<'info' | 'notes' | null>(null);
 
   // Auth guard
   useEffect(() => {
@@ -111,10 +111,6 @@ export default function InboxPage() {
 
   const conversations = conversationsQuery.data ?? [];
   const messages = messagesQuery.data ?? [];
-  const selectedName = useMemo(() => {
-    if (!selected) return '';
-    return selected.contact.displayName || selected.contact.profileName || selected.contact.waId;
-  }, [selected]);
 
   if (!hydrated) {
     return <main className="flex h-screen items-center justify-center text-gray-500">Loading…</main>;
@@ -166,50 +162,14 @@ export default function InboxPage() {
         <section className="flex flex-1 flex-col">
           {selected ? (
             <>
-              <header className="flex items-center gap-3 border-b bg-white px-4 py-3">
-                <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">
-                  {selectedName.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium">{selectedName}</div>
-                  <div className="text-xs text-gray-400">
-                    {selected.contact.waId} ·{' '}
-                    {selected.windowOpen ? (
-                      <span className="text-green-600">window open</span>
-                    ) : (
-                      <span className="text-yellow-600">window closed</span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <TicketControls
-                    conversationId={selected.id}
-                    status={selected.status}
-                    assigneeAgentId={selected.assigneeAgentId}
-                    onUpdated={() =>
-                      queryClient.invalidateQueries({ queryKey: ['conversations'] })
-                    }
-                  />
-                  <div className="flex items-center gap-2">
-                    <ContactControls
-                      contactId={selected.contact.id}
-                      tags={selected.contact.tags}
-                      optInStatus={selected.contact.optInStatus}
-                      onUpdated={() =>
-                        queryClient.invalidateQueries({ queryKey: ['conversations'] })
-                      }
-                    />
-                    <button
-                      onClick={() => setShowNotes((v) => !v)}
-                      className={`rounded px-2 py-0.5 text-xs ${
-                        showNotes ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-800'
-                      }`}
-                    >
-                      Notes
-                    </button>
-                  </div>
-                </div>
-              </header>
+              <ConversationHeader
+                conversation={selected}
+                onUpdated={() => queryClient.invalidateQueries({ queryKey: ['conversations'] })}
+                infoOpen={panel === 'info'}
+                notesOpen={panel === 'notes'}
+                onToggleInfo={() => setPanel((p) => (p === 'info' ? null : 'info'))}
+                onToggleNotes={() => setPanel((p) => (p === 'notes' ? null : 'notes'))}
+              />
               <MessageThread messages={messages} />
               <Composer
                 disabled={false}
@@ -224,7 +184,16 @@ export default function InboxPage() {
             </div>
           )}
         </section>
-        {selected && showNotes && <NotesPanel conversationId={selected.id} />}
+        {selected && panel === 'info' && (
+          <ContactPanel
+            contact={selected.contact}
+            onUpdated={() => queryClient.invalidateQueries({ queryKey: ['conversations'] })}
+            onClose={() => setPanel(null)}
+          />
+        )}
+        {selected && panel === 'notes' && (
+          <NotesPanel conversationId={selected.id} onClose={() => setPanel(null)} />
+        )}
       </div>
     </main>
   );

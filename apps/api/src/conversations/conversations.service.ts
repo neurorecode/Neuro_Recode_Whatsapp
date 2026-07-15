@@ -136,6 +136,10 @@ export class ConversationsService {
     }));
   }
 
+  async deleteNote(conversationId: string, noteId: string): Promise<void> {
+    await this.prisma.internalNote.deleteMany({ where: { id: noteId, conversationId } });
+  }
+
   async addNote(conversationId: string, agentId: string, body: string) {
     await this.getOrThrow(conversationId);
     const n = await this.prisma.internalNote.create({
