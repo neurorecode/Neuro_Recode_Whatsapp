@@ -53,10 +53,10 @@ export function NewChatModal({
   return (
     <div className="glass-scrim fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="glass-card w-full max-w-md overflow-hidden rounded-3xl"
+        className="glass-card flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-center justify-between border-b px-5 py-4">
+        <header className="flex flex-none items-center justify-between border-b border-white/40 px-5 py-4">
           <div>
             <div className="font-semibold text-gray-900">New conversation</div>
             <div className="text-xs text-gray-400">
@@ -68,7 +68,7 @@ export function NewChatModal({
           </button>
         </header>
 
-        <form onSubmit={start} className="space-y-4 p-5">
+        <form onSubmit={start} className="flex-1 space-y-4 overflow-y-auto p-5">
           {error && <div className="rounded-lg bg-red-50 p-2 text-sm text-red-700">{error}</div>}
 
           <div>

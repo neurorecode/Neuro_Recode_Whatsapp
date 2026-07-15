@@ -10,14 +10,30 @@ body,
 
 body {
   @apply text-gray-800 antialiased;
-  /* Soft, light textured canvas with faint brand glows + a light streak */
+  /* Light lavender canvas with soft purple glows (fallback if no image) */
   background:
-    radial-gradient(1000px 520px at 88% 6%, rgba(255, 255, 255, 0.7), transparent 60%),
-    radial-gradient(760px 520px at 10% 4%, rgba(37, 211, 102, 0.1), transparent 55%),
-    radial-gradient(900px 760px at 50% 116%, rgba(18, 140, 126, 0.1), transparent 60%),
-    conic-gradient(from 210deg at 20% 30%, rgba(18, 140, 126, 0.05), transparent 25%),
-    linear-gradient(120deg, #eef2f0 0%, #f3f5f4 45%, #edf3f1 100%);
+    radial-gradient(1000px 520px at 88% 6%, rgba(255, 255, 255, 0.6), transparent 60%),
+    radial-gradient(760px 560px at 8% 2%, rgba(139, 92, 246, 0.16), transparent 55%),
+    radial-gradient(900px 760px at 55% 120%, rgba(124, 58, 237, 0.16), transparent 60%),
+    linear-gradient(120deg, #efeafc 0%, #f2eefb 45%, #ece7fb 100%);
   background-attachment: fixed;
+}
+
+/* Purple artwork at 50% opacity, layered over the lavender canvas.
+   Uses bg-purple.png if you add one at apps/web/public/, otherwise the bundled
+   bg-purple.svg. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: url('/bg-purple.png'), url('/bg-purple.svg');
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-attachment: fixed, fixed;
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 @layer components {
@@ -38,8 +54,8 @@ body {
     background: rgba(255, 255, 255, 0.62);
     backdrop-filter: blur(24px) saturate(150%);
     -webkit-backdrop-filter: blur(24px) saturate(150%);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 24px 70px -24px rgba(7, 94, 84, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 20px 60px -28px rgba(60, 20, 90, 0.35);
   }
   /* Frosted brand-tinted bar (top nav) */
   .glass-dark {

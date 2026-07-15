@@ -28,10 +28,10 @@ function TemplatePreview({ t, onClose }: { t: TemplateDto; onClose: () => void }
       onClick={onClose}
     >
       <div
-        className="glass-card w-full max-w-md overflow-hidden rounded-3xl"
+        className="glass-card flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-start justify-between border-b px-5 py-4">
+        <header className="flex flex-none items-start justify-between border-b border-white/40 px-5 py-4">
           <div>
             <div className="font-semibold text-gray-900">{t.name}</div>
             <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-400">
@@ -49,7 +49,7 @@ function TemplatePreview({ t, onClose }: { t: TemplateDto; onClose: () => void }
           </button>
         </header>
         {/* WhatsApp-style preview */}
-        <div className="bg-[#efeae2] p-5">
+        <div className="flex-1 overflow-y-auto bg-white/25 p-5">
           <div className="ml-auto max-w-[85%] rounded-lg rounded-tr-none bg-[#d9fdd3] px-3 py-2 shadow-sm">
             <div className="whitespace-pre-wrap break-words text-sm text-gray-800">
               {t.bodyText ? highlightVars(t.bodyText) : <span className="italic text-gray-400">No body text</span>}
@@ -57,7 +57,7 @@ function TemplatePreview({ t, onClose }: { t: TemplateDto; onClose: () => void }
             <div className="mt-1 text-right text-[10px] text-gray-400">preview</div>
           </div>
         </div>
-        <div className="border-t px-5 py-3 text-xs text-gray-400">
+        <div className="flex-none border-t border-white/40 px-5 py-3 text-xs text-gray-400">
           Highlighted <span className="rounded bg-yellow-200/70 px-1 text-yellow-900">{'{{n}}'}</span>{' '}
           are variables you fill in when broadcasting.
         </div>
