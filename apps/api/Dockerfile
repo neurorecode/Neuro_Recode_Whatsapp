@@ -1,5 +1,8 @@
 # ---- build ----
 FROM node:22-slim AS build
+# openssl/ca-certificates are required by Prisma's engines (node:slim omits them).
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 RUN corepack enable
 WORKDIR /app
 
@@ -22,7 +25,9 @@ RUN pnpm --filter @nrw/db generate \
 
 # ---- runtime ----
 FROM node:22-slim AS runtime
-RUN corepack enable
+# Prisma's query + schema engines need libssl/openssl at runtime.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app ./
