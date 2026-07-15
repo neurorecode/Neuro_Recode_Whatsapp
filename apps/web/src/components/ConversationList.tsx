@@ -36,11 +36,11 @@ export function ConversationList({
           <button
             key={c.id}
             onClick={() => onSelect(c)}
-            className={`flex items-center gap-3 border-b border-gray-100 px-4 py-3 text-left hover:bg-gray-50 ${
-              active ? 'bg-gray-100' : ''
+            className={`flex items-center gap-3 border-b border-white/25 px-4 py-3 text-left transition ${
+              active ? 'bg-white/55 shadow-sm' : 'hover:bg-white/35'
             }`}
           >
-            <div className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">
+            <div className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand-dark text-sm font-semibold text-white shadow-sm">
               {initials(c.contact.displayName || c.contact.profileName, c.contact.waId)}
             </div>
             <div className="min-w-0 flex-1">

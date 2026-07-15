@@ -32,11 +32,11 @@ function AgentsSection({ isAdmin }: { isAdmin: boolean }) {
   }
 
   return (
-    <section className="rounded-lg border bg-white p-5">
+    <section className="glass-card rounded-2xl p-5">
       <h2 className="mb-3 text-lg font-semibold">Agents</h2>
       <div className="mb-4 space-y-1">
         {(agentsQuery.data ?? []).map((a) => (
-          <div key={a.id} className="flex items-center justify-between rounded border px-3 py-2 text-sm">
+          <div key={a.id} className="flex items-center justify-between rounded-xl border border-white/50 bg-white/40 px-3 py-2 text-sm">
             <span>
               {a.name} <span className="text-gray-400">· {a.email}</span>
             </span>
@@ -52,7 +52,7 @@ function AgentsSection({ isAdmin }: { isAdmin: boolean }) {
             placeholder="Name"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="rounded border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+            className="glass-input rounded-xl px-3 py-2 text-sm"
           />
           <input
             required
@@ -60,7 +60,7 @@ function AgentsSection({ isAdmin }: { isAdmin: boolean }) {
             placeholder="Email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="rounded border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+            className="glass-input rounded-xl px-3 py-2 text-sm"
           />
           <input
             required
@@ -68,12 +68,12 @@ function AgentsSection({ isAdmin }: { isAdmin: boolean }) {
             placeholder="Password (min 6)"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="rounded border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+            className="glass-input rounded-xl px-3 py-2 text-sm"
           />
           <select
             value={form.role}
             onChange={(e) => setForm({ ...form, role: e.target.value })}
-            className="rounded border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+            className="glass-input rounded-xl px-3 py-2 text-sm"
           >
             <option value="agent">Agent</option>
             <option value="admin">Admin</option>
@@ -81,7 +81,7 @@ function AgentsSection({ isAdmin }: { isAdmin: boolean }) {
           <button
             type="submit"
             disabled={busy}
-            className="col-span-2 rounded bg-brand py-2 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-50"
+            className="col-span-2 rounded-xl bg-gradient-to-r from-brand to-brand-dark py-2.5 text-sm font-medium text-white shadow-md shadow-brand/30 transition hover:shadow-brand/40 disabled:opacity-50"
           >
             {busy ? 'Adding…' : 'Add agent'}
           </button>
@@ -119,14 +119,14 @@ function CannedSection() {
   }
 
   return (
-    <section className="rounded-lg border bg-white p-5">
+    <section className="glass-card rounded-2xl p-5">
       <h2 className="mb-3 text-lg font-semibold">Quick replies</h2>
       <div className="mb-4 space-y-1">
         {(cannedQuery.data ?? []).length === 0 && (
           <p className="text-xs text-gray-400">No quick replies yet.</p>
         )}
         {(cannedQuery.data ?? []).map((c) => (
-          <div key={c.id} className="rounded border px-3 py-2 text-sm">
+          <div key={c.id} className="rounded-xl border border-white/50 bg-white/40 px-3 py-2 text-sm">
             <div className="flex items-center justify-between">
               <span className="font-medium">{c.title}</span>
               <button
@@ -145,19 +145,19 @@ function CannedSection() {
           placeholder="Title (e.g. Greeting)"
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+          className="w-full glass-input rounded-xl px-3 py-2 text-sm"
         />
         <textarea
           placeholder="Reply text"
           value={form.body}
           rows={3}
           onChange={(e) => setForm({ ...form, body: e.target.value })}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+          className="w-full glass-input rounded-xl px-3 py-2 text-sm"
         />
         <button
           type="submit"
           disabled={busy}
-          className="rounded bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-50"
+          className="rounded-xl bg-gradient-to-r from-brand to-brand-dark px-4 py-2 text-sm font-medium text-white shadow-md shadow-brand/30 transition hover:shadow-brand/40 disabled:opacity-50"
         >
           {busy ? 'Saving…' : 'Add quick reply'}
         </button>
@@ -175,7 +175,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="flex h-screen flex-col bg-gray-100">
+    <main className="flex h-screen flex-col">
       <AppNav />
       <div className="mx-auto grid w-full max-w-5xl flex-1 gap-6 overflow-y-auto p-6 md:grid-cols-2">
         <AgentsSection isAdmin={agent?.role === 'admin'} />

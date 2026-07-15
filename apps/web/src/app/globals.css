@@ -9,5 +9,75 @@ body,
 }
 
 body {
-  @apply bg-gray-100 text-gray-900 antialiased;
+  @apply text-gray-800 antialiased;
+  /* Ambient gradient built from the brand palette (teal / green) */
+  background:
+    radial-gradient(1100px 620px at 8% -10%, rgba(37, 211, 102, 0.18), transparent 60%),
+    radial-gradient(1000px 520px at 100% 0%, rgba(18, 140, 126, 0.22), transparent 55%),
+    radial-gradient(900px 760px at 50% 120%, rgba(7, 94, 84, 0.16), transparent 60%),
+    linear-gradient(135deg, #e9f6f1 0%, #eef3f2 45%, #e8f4ef 100%);
+  background-attachment: fixed;
+}
+
+@layer components {
+  /* Frosted translucent surface */
+  .glass {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+  }
+  .glass-soft {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(14px) saturate(130%);
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
+  }
+  /* Elevated card (modals, login, page cards) */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.62);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 24px 70px -24px rgba(7, 94, 84, 0.4);
+  }
+  /* Frosted brand-tinted bar (top nav) */
+  .glass-dark {
+    background: linear-gradient(135deg, rgba(7, 94, 84, 0.78), rgba(18, 140, 126, 0.66));
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  }
+  /* Translucent input */
+  .glass-input {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+  }
+  .glass-input:focus {
+    outline: none;
+    border-color: rgba(18, 140, 126, 0.6);
+    box-shadow: 0 0 0 3px rgba(18, 140, 126, 0.15);
+  }
+  /* Modal scrim */
+  .glass-scrim {
+    background: rgba(7, 94, 84, 0.22);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+}
+
+/* Smooth, soft global touches */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(7, 94, 84, 0.2);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }

@@ -47,7 +47,7 @@ export function NotesPanel({
   const notes = notesQuery.data ?? [];
 
   return (
-    <aside className="flex w-80 flex-none flex-col border-l bg-amber-50/60">
+    <aside className="flex w-80 flex-none flex-col border-l border-white/40 bg-amber-50/40 backdrop-blur-xl">
       <header className="flex items-center justify-between border-b border-amber-200 px-4 py-3">
         <span className="text-sm font-semibold text-amber-800">Internal notes</span>
         <button onClick={onClose} className="text-amber-400 hover:text-amber-700">

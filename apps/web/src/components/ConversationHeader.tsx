@@ -50,7 +50,7 @@ export function ConversationHeader({
     "bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")] bg-[length:14px] bg-[right_0.4rem_center] bg-no-repeat";
 
   return (
-    <header className="flex items-center justify-between gap-3 border-b bg-white px-5 py-2.5">
+    <header className="glass flex items-center justify-between gap-3 border-b border-white/40 px-5 py-2.5">
       {/* Contact identity */}
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand-dark text-sm font-semibold text-white shadow-sm">

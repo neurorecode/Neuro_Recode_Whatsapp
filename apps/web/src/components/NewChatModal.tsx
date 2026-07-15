@@ -51,9 +51,9 @@ export function NewChatModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="glass-scrim fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl"
+        className="glass-card w-full max-w-md overflow-hidden rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between border-b px-5 py-4">
@@ -78,7 +78,7 @@ export function NewChatModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Country code + number, e.g. 919876543210"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              className="w-full glass-input rounded-xl px-3 py-2"
             />
             <p className="mt-1 text-xs text-gray-400">Include the country code, no + or spaces needed.</p>
           </div>
@@ -89,7 +89,7 @@ export function NewChatModal({
               required
               value={templateId}
               onChange={(e) => onTemplateChange(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              className="w-full glass-input rounded-xl px-3 py-2"
             >
               <option value="">Select an approved template…</option>
               {approved.map((t) => (
@@ -128,7 +128,7 @@ export function NewChatModal({
           <button
             type="submit"
             disabled={busy || !phone || !templateId}
-            className="w-full rounded-lg bg-brand py-2 font-medium text-white transition hover:bg-brand-dark disabled:opacity-50"
+            className="w-full rounded-xl bg-gradient-to-r from-brand to-brand-dark py-2.5 font-medium text-white shadow-md shadow-brand/30 transition hover:shadow-brand/40 disabled:opacity-50"
           >
             {busy ? 'Starting…' : 'Start conversation'}
           </button>

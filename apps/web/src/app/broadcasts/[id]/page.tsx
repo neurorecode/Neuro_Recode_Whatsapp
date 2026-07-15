@@ -32,7 +32,7 @@ export default function BroadcastDetailPage({ params }: { params: { id: string }
   const b = query.data;
 
   return (
-    <main className="flex h-screen flex-col bg-gray-100">
+    <main className="flex h-screen flex-col">
       <AppNav />
       <div className="mx-auto w-full max-w-4xl flex-1 overflow-y-auto p-6">
         <Link href="/broadcasts" className="text-sm text-brand hover:underline">
@@ -55,7 +55,7 @@ export default function BroadcastDetailPage({ params }: { params: { id: string }
 
             <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
               {(['total', 'sent', 'delivered', 'read', 'failed'] as const).map((k) => (
-                <div key={k} className="rounded-lg border bg-white p-3 text-center">
+                <div key={k} className="glass-card rounded-2xl p-3 text-center">
                   <div className="text-2xl font-semibold">
                     {k === 'total' ? b.total : (b.counts as any)[k]}
                   </div>
@@ -64,9 +64,9 @@ export default function BroadcastDetailPage({ params }: { params: { id: string }
               ))}
             </div>
 
-            <div className="overflow-hidden rounded-lg border bg-white">
+            <div className="overflow-hidden glass-card rounded-2xl">
               <table className="w-full text-left text-sm">
-                <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+                <thead className="bg-white/40 text-xs uppercase text-gray-500">
                   <tr>
                     <th className="px-4 py-2">Contact</th>
                     <th className="px-4 py-2">Number</th>

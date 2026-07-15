@@ -33,12 +33,15 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex h-screen items-center justify-center bg-brand-dark">
+    <main className="flex h-screen items-center justify-center p-4">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-sm space-y-4 rounded-xl bg-white p-8 shadow-lg"
+        className="glass-card w-full max-w-sm space-y-5 rounded-3xl p-8"
       >
         <div className="text-center">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-brand-dark text-xl font-bold text-white shadow-lg">
+            N
+          </div>
           <h1 className="text-xl font-semibold text-brand-dark">Neuro Recode</h1>
           <p className="text-sm text-gray-500">Agent Inbox</p>
         </div>
@@ -52,7 +55,7 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 focus:border-brand focus:outline-none"
+            className="glass-input w-full rounded-xl px-3 py-2"
             placeholder="admin@neurorecode.com"
           />
         </div>
@@ -63,13 +66,13 @@ export default function LoginPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 focus:border-brand focus:outline-none"
+            className="glass-input w-full rounded-xl px-3 py-2"
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded bg-brand py-2 font-medium text-white hover:bg-brand-dark disabled:opacity-60"
+          className="w-full rounded-xl bg-gradient-to-r from-brand to-brand-dark py-2.5 font-medium text-white shadow-lg shadow-brand/30 transition hover:shadow-brand/40 disabled:opacity-60"
         >
           {loading ? 'Signing in…' : 'Sign in'}
         </button>

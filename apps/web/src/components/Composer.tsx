@@ -85,7 +85,7 @@ export function Composer({
 
   if (!windowOpen) {
     return (
-      <div className="border-t bg-amber-50 p-3 text-center text-sm text-amber-800">
+      <div className="glass border-t border-white/40 p-3 text-center text-sm text-amber-800">
         The 24-hour service window has closed — send an approved template (from Templates /
         Broadcasts) to re-engage this contact.
       </div>
@@ -102,10 +102,10 @@ export function Composer({
   if (pendingFile) {
     const kb = Math.round(pendingFile.size / 1024);
     return (
-      <div className="border-t bg-white">
+      <div className="glass border-t border-white/40">
         {errorBanner}
         <div className="p-3">
-          <div className="flex items-start gap-3 rounded-xl border bg-gray-50 p-3">
+          <div className="flex items-start gap-3 rounded-2xl border border-white/50 bg-white/50 p-3 backdrop-blur">
             {previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={previewUrl} alt="" className="h-20 w-20 flex-none rounded-lg object-cover" />
@@ -140,7 +140,7 @@ export function Composer({
                 }
               }}
               placeholder="Add a caption (optional)"
-              className="flex-1 rounded-full border border-gray-300 px-4 py-2 focus:border-brand focus:outline-none"
+              className="glass-input flex-1 rounded-full px-4 py-2"
             />
             <button
               onClick={cancelMedia}
@@ -165,7 +165,7 @@ export function Composer({
 
   // ---- Normal text mode ----
   return (
-    <div className="border-t bg-white">
+    <div className="glass border-t border-white/40">
       {errorBanner}
       {showCanned && (
         <div className="max-h-40 overflow-y-auto border-b p-2">
@@ -228,7 +228,7 @@ export function Composer({
             }
           }}
           placeholder="Type a message"
-          className="flex-1 rounded-full border border-gray-300 px-4 py-2 focus:border-brand focus:outline-none"
+          className="glass-input flex-1 rounded-full px-4 py-2"
         />
         <button
           onClick={submit}

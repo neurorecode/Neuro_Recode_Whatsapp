@@ -56,14 +56,16 @@ export function MessageThread({ messages }: { messages: MessageDto[] }) {
   }, [messages.length]);
 
   return (
-    <div className="flex-1 space-y-2 overflow-y-auto bg-[#efeae2] p-4">
+    <div className="flex-1 space-y-2.5 overflow-y-auto p-4">
       {messages.map((m) => {
         const outbound = m.direction === 'outbound';
         return (
           <div key={m.id} className={`flex ${outbound ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[70%] rounded-lg px-3 py-2 shadow-sm ${
-                outbound ? 'bg-[#d9fdd3]' : 'bg-white'
+              className={`max-w-[70%] rounded-2xl border px-3.5 py-2 shadow-sm backdrop-blur-sm ${
+                outbound
+                  ? 'rounded-tr-md border-white/50 bg-[#dcfce7]/80'
+                  : 'rounded-tl-md border-white/60 bg-white/75'
               }`}
             >
               {MEDIA_TYPES.has(m.type) ? (

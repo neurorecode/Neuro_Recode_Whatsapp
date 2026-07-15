@@ -135,19 +135,19 @@ export default function InboxPage() {
       <AppNav />
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="flex w-96 flex-none flex-col border-r bg-white">
-          <div className="space-y-2 border-b bg-gray-50 px-3 py-2">
+        <aside className="glass flex w-96 flex-none flex-col border-r border-white/40">
+          <div className="space-y-2 border-b border-white/40 bg-white/20 px-3 py-2">
             <div className="flex items-center gap-2">
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search name or number…"
-                className="flex-1 rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
+                className="glass-input flex-1 rounded-xl px-3 py-1.5 text-sm"
               />
               <button
                 onClick={() => setShowNewChat(true)}
                 title="Start a new conversation"
-                className="flex-none rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-white transition hover:bg-brand-dark"
+                className="flex-none rounded-xl bg-gradient-to-r from-brand to-brand-dark px-3 py-1.5 text-sm font-medium text-white shadow-md shadow-brand/30 transition hover:shadow-brand/40"
               >
                 + New
               </button>
@@ -202,7 +202,7 @@ export default function InboxPage() {
               />
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center bg-[#efeae2] text-gray-400">
+            <div className="flex flex-1 items-center justify-center text-gray-400">
               Select a conversation to start
             </div>
           )}

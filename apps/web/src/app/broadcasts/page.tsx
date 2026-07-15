@@ -75,11 +75,11 @@ export default function BroadcastsPage() {
   const broadcasts = broadcastsQuery.data ?? [];
 
   return (
-    <main className="flex h-screen flex-col bg-gray-100">
+    <main className="flex h-screen flex-col">
       <AppNav />
       <div className="mx-auto grid w-full max-w-6xl flex-1 gap-6 overflow-y-auto p-6 md:grid-cols-2">
         {/* Create */}
-        <section className="rounded-lg border bg-white p-5">
+        <section className="glass-card rounded-2xl p-5">
           <h1 className="mb-1 text-lg font-semibold">New broadcast</h1>
           <p className="mb-4 text-sm text-gray-500">
             Send an approved template to opted-in contacts, filtered by tag.
@@ -92,7 +92,7 @@ export default function BroadcastsPage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-2 focus:border-brand focus:outline-none"
+                className="w-full glass-input rounded-xl px-3 py-2"
                 placeholder="July offer"
               />
             </div>
@@ -103,7 +103,7 @@ export default function BroadcastsPage() {
                 required
                 value={templateId}
                 onChange={(e) => onTemplateChange(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-2 focus:border-brand focus:outline-none"
+                className="w-full glass-input rounded-xl px-3 py-2"
               >
                 <option value="">Select a template…</option>
                 {approvedTemplates.map((t) => (
@@ -137,7 +137,7 @@ export default function BroadcastsPage() {
                       setBodyParams((p) => p.map((x, idx) => (idx === i ? e.target.value : x)))
                     }
                     placeholder={`{{${i + 1}}}`}
-                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+                    className="w-full glass-input rounded-xl px-3 py-2 text-sm"
                   />
                 ))}
               </div>
@@ -176,7 +176,7 @@ export default function BroadcastsPage() {
             <button
               type="submit"
               disabled={submitting || !templateId || !name}
-              className="w-full rounded bg-brand py-2 font-medium text-white hover:bg-brand-dark disabled:opacity-50"
+              className="w-full rounded-xl bg-gradient-to-r from-brand to-brand-dark py-2.5 font-medium text-white shadow-md shadow-brand/30 transition hover:shadow-brand/40 disabled:opacity-50"
             >
               {submitting ? 'Starting…' : 'Create & send'}
             </button>
@@ -184,7 +184,7 @@ export default function BroadcastsPage() {
         </section>
 
         {/* History */}
-        <section className="rounded-lg border bg-white p-5">
+        <section className="glass-card rounded-2xl p-5">
           <h2 className="mb-3 text-lg font-semibold">Broadcasts</h2>
           <div className="space-y-2">
             {broadcasts.length === 0 && (
@@ -194,7 +194,7 @@ export default function BroadcastsPage() {
               <Link
                 key={b.id}
                 href={`/broadcasts/${b.id}`}
-                className="block rounded border p-3 hover:bg-gray-50"
+                className="block rounded-xl border border-white/50 bg-white/40 p-3 transition hover:bg-white/60"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{b.name}</span>

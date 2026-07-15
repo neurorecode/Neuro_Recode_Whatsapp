@@ -18,17 +18,17 @@ export function AppNav() {
   const { agent, logout } = useAuth();
 
   return (
-    <header className="flex items-center justify-between bg-brand-dark px-4 py-2 text-white">
+    <header className="glass-dark sticky top-0 z-30 flex items-center justify-between px-4 py-2 text-white">
       <div className="flex items-center gap-1">
-        <span className="mr-3 font-semibold">Neuro Recode</span>
+        <span className="mr-3 font-semibold tracking-tight">Neuro Recode</span>
         {LINKS.map((l) => {
           const active = pathname === l.href || pathname.startsWith(l.href + '/');
           return (
             <Link
               key={l.href}
               href={l.href}
-              className={`rounded px-3 py-1 text-sm ${
-                active ? 'bg-white/20' : 'hover:bg-white/10'
+              className={`rounded-lg px-3 py-1 text-sm transition ${
+                active ? 'bg-white/25 shadow-sm' : 'hover:bg-white/10'
               }`}
             >
               {l.label}
@@ -44,7 +44,7 @@ export function AppNav() {
             logout();
             router.replace('/login');
           }}
-          className="rounded bg-white/10 px-2 py-1 text-xs hover:bg-white/20"
+          className="rounded-lg bg-white/15 px-3 py-1 text-xs transition hover:bg-white/25"
         >
           Logout
         </button>
