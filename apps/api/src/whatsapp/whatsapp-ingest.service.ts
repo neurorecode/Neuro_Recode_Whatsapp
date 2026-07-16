@@ -327,14 +327,38 @@ export class WhatsappIngestService {
         return { type: 'document', body: msg.document?.caption ?? msg.document?.filename ?? null };
       case 'sticker':
         return { type: 'sticker', body: null };
-      case 'location':
-        return { type: 'location', body: msg.location?.name ?? null };
+      case 'location': {
+        const l = msg.location;
+        const label = l?.name ?? l?.address ?? (l ? `${l.latitude}, ${l.longitude}` : null);
+        return { type: 'location', body: label ? `📍 ${label}` : '📍 Location' };
+      }
       case 'button':
         return { type: 'interactive', body: msg.button?.text ?? null };
       case 'interactive':
         return { type: 'interactive', body: null };
-      default:
-        return { type: 'unsupported', body: null };
+      // A reaction (emoji) to one of our messages.
+      case 'reaction':
+        return { type: 'text', body: msg.reaction?.emoji || 'Reacted' };
+      // A shared contact card.
+      case 'contacts': {
+        const names = (msg.contacts ?? [])
+          .map((c) => c.name?.formatted_name)
+          .filter(Boolean)
+          .join(', ');
+        return { type: 'contacts', body: names ? `👤 ${names}` : '👤 Contact card' };
+      }
+      case 'system':
+        return { type: 'system', body: msg.system?.body ?? '[system message]' };
+      case 'order':
+        return { type: 'unsupported', body: '🛒 Order' };
+      default: {
+        // Meta itself can mark a message "unsupported" (polls, view-once, newer
+        // types). Surface the reason/type so it isn't an opaque label, and log it.
+        const err = msg.errors?.[0];
+        const detail = err?.title || err?.message || msg.type || 'unknown';
+        this.logger.warn(`unsupported inbound message type "${msg.type}" (${detail})`);
+        return { type: 'unsupported', body: `[unsupported: ${detail}]` };
+      }
     }
   }
 
