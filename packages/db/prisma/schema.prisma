@@ -67,6 +67,7 @@ model Contact {
   // WhatsApp id / E.164 phone number (Meta returns wa_id)
   waId        String      @unique
   phone       String?
+  email       String?
   profileName String?
   displayName String?
   tags        String[]    @default([])
@@ -277,6 +278,9 @@ model BroadcastRecipient {
   broadcast   Broadcast     @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
   contactId   String
   contact     Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  // Per-recipient template body params (used by imported/personalized broadcasts).
+  // Empty falls back to the broadcast's shared params.
+  params      String[]      @default([])
   wamid       String?
   status      MessageStatus @default(queued)
   errorCode   String?

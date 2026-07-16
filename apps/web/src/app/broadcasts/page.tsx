@@ -9,6 +9,7 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/useRequireAuth';
 import { AppSidebar } from '@/components/AppSidebar';
 import { PageHeader } from '@/components/PageHeader';
+import { ImportBroadcastModal } from '@/components/ImportBroadcastModal';
 
 export default function BroadcastsPage() {
   const { ready } = useRequireAuth();
@@ -20,6 +21,7 @@ export default function BroadcastsPage() {
   const [bodyParams, setBodyParams] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const templatesQuery = useQuery({
     queryKey: ['templates'],
@@ -82,6 +84,19 @@ export default function BroadcastsPage() {
         <PageHeader
           title="Broadcasts"
           subtitle="Send an approved template to opted-in contacts, filtered by tag."
+          actions={
+            <button
+              onClick={() => setImporting(true)}
+              className="flex items-center gap-2 rounded-full bg-gradient-to-r from-brand to-brand-dark px-4 py-2 text-sm font-medium text-white shadow-md shadow-brand/30 transition hover:shadow-brand/40"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              Import Excel
+            </button>
+          }
         />
         <div className="grid flex-1 gap-6 overflow-y-auto px-8 pb-8 md:grid-cols-2">
         {/* Create */}
@@ -216,6 +231,15 @@ export default function BroadcastsPage() {
         </section>
         </div>
       </div>
+      {importing && (
+        <ImportBroadcastModal
+          onClose={() => setImporting(false)}
+          onDone={(id) => {
+            setImporting(false);
+            router.push(`/broadcasts/${id}`);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,18 +1,22 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { RedisIoAdapter } from './realtime/redis-io.adapter';
 
 async function bootstrap() {
   // rawBody: true lets us verify the WhatsApp webhook signature against the
   // exact bytes Meta sent (JSON re-serialization would change the signature).
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
   const corsOrigins = config.get<string[]>('corsOrigins') ?? [];
   app.enableCors({ origin: corsOrigins, credentials: true });
+
+  // Allow large JSON payloads for bulk imports (Excel/CSV broadcast lists).
+  app.useBodyParser('json', { limit: '25mb' });
 
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: false }),

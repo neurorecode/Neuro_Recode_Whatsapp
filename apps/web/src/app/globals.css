@@ -137,6 +137,33 @@ body::after {
   }
 }
 
+/* Page navigation transition — content rolls in from top to bottom */
+@keyframes pageRollDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-22px);
+    filter: blur(2px);
+  }
+  60% {
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+.page-transition {
+  /* 'backwards' applies the start frame at mount but leaves NO transform/filter
+     lingering after it ends — so fixed-position modals still anchor to the viewport. */
+  animation: pageRollDown 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition {
+    animation: none;
+  }
+}
+
 /* Smooth, soft global touches */
 * {
   -webkit-tap-highlight-color: transparent;

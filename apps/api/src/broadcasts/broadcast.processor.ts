@@ -60,7 +60,12 @@ export class BroadcastProcessor implements OnModuleInit, OnModuleDestroy {
     if (!recipient || !broadcast) return;
 
     const { bodyText, bodyVarCount } = parseBody(broadcast.template.components);
-    const bodyParams: string[] = (broadcast.audienceFilter as any)?.bodyParams ?? [];
+    // Per-recipient params (imported/personalized lists) take precedence over
+    // the broadcast's shared params (tag-based broadcasts).
+    const bodyParams: string[] =
+      recipient.params && recipient.params.length
+        ? recipient.params
+        : ((broadcast.audienceFilter as any)?.bodyParams ?? []);
     const components =
       bodyVarCount > 0
         ? [

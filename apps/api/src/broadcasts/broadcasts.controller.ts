@@ -1,5 +1,13 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { ArrayNotEmpty, IsArray, IsOptional, IsString, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsOptional,
+  IsString,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { BroadcastsService } from './broadcasts.service';
 
@@ -21,6 +29,44 @@ class CreateBroadcastDto {
   @IsArray()
   @IsString({ each: true })
   bodyParams?: string[];
+}
+
+class ImportRecipientDto {
+  @IsString()
+  phone: string;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  params?: string[];
+}
+
+class ImportBroadcastDto {
+  @IsString()
+  @MinLength(1)
+  name: string;
+
+  @IsString()
+  @MinLength(1)
+  templateId: string;
+
+  @IsOptional()
+  @IsString()
+  listTag?: string;
+
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => ImportRecipientDto)
+  recipients: ImportRecipientDto[];
 }
 
 @UseGuards(JwtAuthGuard)
@@ -45,6 +91,16 @@ export class BroadcastsController {
       templateId: dto.templateId,
       tags: dto.tags ?? [],
       bodyParams: dto.bodyParams ?? [],
+    });
+  }
+
+  @Post('import')
+  importList(@Body() dto: ImportBroadcastDto) {
+    return this.broadcasts.createFromImport({
+      name: dto.name,
+      templateId: dto.templateId,
+      listTag: dto.listTag,
+      recipients: dto.recipients,
     });
   }
 }
