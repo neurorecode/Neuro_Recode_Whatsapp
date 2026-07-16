@@ -10,6 +10,7 @@ import {
   IconMegaphone,
   IconSettings,
   IconLogout,
+  IconFlow,
 } from './icons';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -25,6 +26,7 @@ const GROUPS: { title: string; items: Item[] }[] = [
     items: [
       { href: '/templates', label: 'Templates', icon: IconTemplate },
       { href: '/broadcasts', label: 'Broadcasts', icon: IconMegaphone },
+      { href: '/sequences', label: 'Sequences', icon: IconFlow },
     ],
   },
   {

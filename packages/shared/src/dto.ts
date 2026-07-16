@@ -102,6 +102,7 @@ export interface BroadcastListItem {
   name: string;
   status: string;
   createdAt: string;
+  scheduledAt: string | null;
   templateName: string;
   total: number;
   counts: BroadcastCounts;

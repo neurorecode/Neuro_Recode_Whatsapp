@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/auth';
 import { AppSidebar } from '@/components/AppSidebar';
 import { PageHeader } from '@/components/PageHeader';
 import { GlassSelect } from '@/components/GlassSelect';
+import { AutomationSettings } from '@/components/AutomationSettings';
 
 function AgentsSection({ isAdmin }: { isAdmin: boolean }) {
   const queryClient = useQueryClient();
@@ -182,9 +183,10 @@ export default function SettingsPage() {
       <AppSidebar />
       <div className="page-transition flex flex-1 flex-col overflow-hidden">
         <PageHeader title="Settings" subtitle="Manage agents and quick replies." />
-        <div className="grid flex-1 gap-6 overflow-y-auto px-8 pb-8 md:grid-cols-2">
+        <div className="grid flex-1 auto-rows-min gap-6 overflow-y-auto px-8 pb-8 md:grid-cols-2">
           <AgentsSection isAdmin={agent?.role === 'admin'} />
           <CannedSection />
+          <AutomationSettings isAdmin={agent?.role === 'admin'} />
         </div>
       </div>
     </div>

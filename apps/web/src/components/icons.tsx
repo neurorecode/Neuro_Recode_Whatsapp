@@ -115,6 +115,14 @@ export const IconSearch = (p: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+export const IconFlow = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <rect x="3" y="3" width="6" height="6" rx="1" />
+    <rect x="15" y="15" width="6" height="6" rx="1" />
+    <path d="M6 9v3a3 3 0 0 0 3 3h6" />
+  </svg>
+);
+
 export const IconSun = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}>
     <circle cx="12" cy="12" r="4" />

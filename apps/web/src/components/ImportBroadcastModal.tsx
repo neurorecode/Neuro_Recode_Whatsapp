@@ -41,6 +41,7 @@ export function ImportBroadcastModal({
 
   const [name, setName] = useState('');
   const [listTag, setListTag] = useState('');
+  const [scheduledAt, setScheduledAt] = useState('');
   const [templateId, setTemplateId] = useState('');
   const [fileName, setFileName] = useState('');
   const [sheet, setSheet] = useState<ParsedSheet | null>(null);
@@ -139,7 +140,13 @@ export function ImportBroadcastModal({
     try {
       const res = await api.post<{ id: string; imported: number; skipped: number }>(
         '/broadcasts/import',
-        { name: name.trim(), templateId, listTag: listTag.trim() || undefined, recipients },
+        {
+          name: name.trim(),
+          templateId,
+          listTag: listTag.trim() || undefined,
+          recipients,
+          scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
+        },
       );
       onDone(res.id);
     } catch (err: any) {
@@ -200,6 +207,18 @@ export function ImportBroadcastModal({
                 value={listTag}
                 onChange={(e) => setListTag(e.target.value)}
                 placeholder="july-webinar"
+                className="w-full glass-input rounded-xl px-3 py-2"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-sm font-medium">
+                Schedule for{' '}
+                <span className="font-normal text-gray-400">(optional — blank sends now)</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={scheduledAt}
+                onChange={(e) => setScheduledAt(e.target.value)}
                 className="w-full glass-input rounded-xl px-3 py-2"
               />
             </div>
@@ -365,7 +384,7 @@ export function ImportBroadcastModal({
             disabled={busy || validCount === 0 || !templateId || !name.trim()}
             className="rounded-xl bg-gradient-to-r from-brand to-brand-dark px-5 py-2.5 font-medium text-white shadow-md shadow-brand/30 transition hover:shadow-brand/40 disabled:opacity-50"
           >
-            {busy ? 'Sending…' : `Send to ${validCount || 0}`}
+            {busy ? 'Sending…' : scheduledAt ? `Schedule for ${validCount || 0}` : `Send to ${validCount || 0}`}
           </button>
         </footer>
       </div>

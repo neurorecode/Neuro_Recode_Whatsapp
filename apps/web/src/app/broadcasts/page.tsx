@@ -26,6 +26,7 @@ export default function BroadcastsPage() {
   const [templateId, setTemplateId] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [bodyParams, setBodyParams] = useState<string[]>([]);
+  const [scheduledAt, setScheduledAt] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -73,6 +74,7 @@ export default function BroadcastsPage() {
         templateId,
         tags: selectedTags,
         bodyParams,
+        scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
       });
       router.push(`/broadcasts/${created.id}`);
     } catch (err: any) {
@@ -80,6 +82,11 @@ export default function BroadcastsPage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function cancelBroadcast(id: string) {
+    await api.post(`/broadcasts/${id}/cancel`);
+    broadcastsQuery.refetch();
   }
 
   const broadcasts = broadcastsQuery.data ?? [];
@@ -200,12 +207,25 @@ export default function BroadcastsPage() {
               </div>
             </div>
 
+            <div>
+              <label className="mb-1 block text-sm font-medium">
+                Schedule for{' '}
+                <span className="font-normal text-gray-400">(optional — leave blank to send now)</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={scheduledAt}
+                onChange={(e) => setScheduledAt(e.target.value)}
+                className="w-full glass-input rounded-xl px-3 py-2"
+              />
+            </div>
+
             <button
               type="submit"
               disabled={submitting || !templateId || !name}
               className="w-full rounded-xl bg-gradient-to-r from-brand to-brand-dark py-2.5 font-medium text-white shadow-md shadow-brand/30 transition hover:shadow-brand/40 disabled:opacity-50"
             >
-              {submitting ? 'Starting…' : 'Create & send'}
+              {submitting ? 'Starting…' : scheduledAt ? 'Schedule broadcast' : 'Create & send'}
             </button>
           </form>
         </section>
@@ -218,20 +238,45 @@ export default function BroadcastsPage() {
               <p className="text-sm text-gray-400">No broadcasts yet.</p>
             )}
             {broadcasts.map((b) => (
-              <Link
+              <div
                 key={b.id}
-                href={`/broadcasts/${b.id}`}
-                className="block rounded-xl border border-white/50 bg-white/40 p-3 transition hover:bg-white/60"
+                className="rounded-xl border border-white/50 bg-white/40 p-3 transition hover:bg-white/60"
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{b.name}</span>
-                  <span className="text-xs capitalize text-gray-500">{b.status}</span>
+                <div className="flex items-center justify-between gap-2">
+                  <Link href={`/broadcasts/${b.id}`} className="min-w-0 flex-1 font-medium hover:underline">
+                    {b.name}
+                  </Link>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${
+                      b.status === 'scheduled'
+                        ? 'bg-blue-100 text-blue-700'
+                        : b.status === 'cancelled'
+                          ? 'bg-gray-200 text-gray-600'
+                          : 'bg-white/70 text-gray-600'
+                    }`}
+                  >
+                    {b.status}
+                  </span>
                 </div>
-                <div className="mt-1 text-xs text-gray-500">
-                  {b.templateName} · {b.total} recipients · sent {b.counts.sent} · delivered{' '}
-                  {b.counts.delivered} · read {b.counts.read} · failed {b.counts.failed}
-                </div>
-              </Link>
+                {b.status === 'scheduled' && b.scheduledAt ? (
+                  <div className="mt-1 flex items-center justify-between text-xs">
+                    <span className="text-blue-600">
+                      🕑 Sends {new Date(b.scheduledAt).toLocaleString()} · {b.total} recipients
+                    </span>
+                    <button
+                      onClick={() => cancelBroadcast(b.id)}
+                      className="text-gray-400 hover:text-red-500"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <Link href={`/broadcasts/${b.id}`} className="mt-1 block text-xs text-gray-500">
+                    {b.templateName} · {b.total} recipients · sent {b.counts.sent} · delivered{' '}
+                    {b.counts.delivered} · read {b.counts.read} · failed {b.counts.failed}
+                  </Link>
+                )}
+              </div>
             ))}
           </div>
         </section>
