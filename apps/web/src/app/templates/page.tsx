@@ -97,7 +97,7 @@ export default function TemplatesPage() {
   return (
     <div className="flex h-screen">
       <AppSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="page-transition flex flex-1 flex-col overflow-hidden">
         <PageHeader
           title="Templates"
           subtitle="Approved templates synced from WhatsApp. Click a row to preview."

@@ -6,6 +6,7 @@ import * as XLSX from 'xlsx';
 import type { TemplateDto } from '@nrw/shared';
 import { api } from '@/lib/api';
 import { IconClose } from './icons';
+import { GlassSelect, type GlassOption } from './GlassSelect';
 
 type ParsedSheet = { headers: string[]; rows: string[][] };
 
@@ -142,11 +143,15 @@ export function ImportBroadcastModal({
     }
   }
 
-  const colOptions = (sheet?.headers ?? []).map((h, i) => (
-    <option key={i} value={i}>
-      {h || `Column ${i + 1}`}
-    </option>
-  ));
+  const templateOptions: GlassOption[] = approved.map((t) => ({
+    value: t.id,
+    label: `${t.name} (${t.language})`,
+    hint: `${t.bodyVarCount} var${t.bodyVarCount === 1 ? '' : 's'}`,
+  }));
+  const columnOptions = (sheet?.headers ?? []).map((h, i) => ({
+    value: String(i),
+    label: h || `Column ${i + 1}`,
+  }));
 
   return (
     <div className="glass-scrim fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -195,18 +200,13 @@ export function ImportBroadcastModal({
 
           <div>
             <label className="mb-1 block text-sm font-medium">Template (approved only)</label>
-            <select
+            <GlassSelect
               value={templateId}
-              onChange={(e) => onTemplateChange(e.target.value)}
-              className="w-full glass-input rounded-xl px-3 py-2"
-            >
-              <option value="">Select a template…</option>
-              {approved.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name} ({t.language}) · {t.bodyVarCount} var{t.bodyVarCount === 1 ? '' : 's'}
-                </option>
-              ))}
-            </select>
+              onChange={onTemplateChange}
+              options={templateOptions}
+              placeholder="Select a template…"
+              className="w-full"
+            />
           </div>
 
           {/* File upload */}
@@ -245,36 +245,30 @@ export function ImportBroadcastModal({
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-gray-500">Phone *</label>
-                  <select
-                    value={phoneCol}
-                    onChange={(e) => setPhoneCol(Number(e.target.value))}
-                    className="w-full glass-input rounded-lg px-2 py-1.5 text-sm"
-                  >
-                    <option value={-1}>— select —</option>
-                    {colOptions}
-                  </select>
+                  <GlassSelect
+                    value={String(phoneCol)}
+                    onChange={(v) => setPhoneCol(Number(v))}
+                    options={[{ value: '-1', label: '— select —' }, ...columnOptions]}
+                    className="w-full"
+                  />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-gray-500">Name</label>
-                  <select
-                    value={nameCol}
-                    onChange={(e) => setNameCol(Number(e.target.value))}
-                    className="w-full glass-input rounded-lg px-2 py-1.5 text-sm"
-                  >
-                    <option value={-1}>— none —</option>
-                    {colOptions}
-                  </select>
+                  <GlassSelect
+                    value={String(nameCol)}
+                    onChange={(v) => setNameCol(Number(v))}
+                    options={[{ value: '-1', label: '— none —' }, ...columnOptions]}
+                    className="w-full"
+                  />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-gray-500">Email</label>
-                  <select
-                    value={emailCol}
-                    onChange={(e) => setEmailCol(Number(e.target.value))}
-                    className="w-full glass-input rounded-lg px-2 py-1.5 text-sm"
-                  >
-                    <option value={-1}>— none —</option>
-                    {colOptions}
-                  </select>
+                  <GlassSelect
+                    value={String(emailCol)}
+                    onChange={(v) => setEmailCol(Number(v))}
+                    options={[{ value: '-1', label: '— none —' }, ...columnOptions]}
+                    className="w-full"
+                  />
                 </div>
               </div>
 
@@ -294,10 +288,9 @@ export function ImportBroadcastModal({
                       <span className="w-10 flex-none rounded bg-yellow-200/70 px-1 text-center text-xs font-medium text-yellow-900">
                         {`{{${i + 1}}}`}
                       </span>
-                      <select
+                      <GlassSelect
                         value={v.mode === 'column' ? `col:${v.col}` : 'literal'}
-                        onChange={(e) => {
-                          const val = e.target.value;
+                        onChange={(val) => {
                           setVarSources((prev) =>
                             prev.map((x, idx) => {
                               if (idx !== i) return x;
@@ -306,15 +299,15 @@ export function ImportBroadcastModal({
                             }),
                           );
                         }}
-                        className="glass-input rounded-lg px-2 py-1.5 text-sm"
-                      >
-                        <option value="literal">Fixed text…</option>
-                        {sheet.headers.map((h, ci) => (
-                          <option key={ci} value={`col:${ci}`}>
-                            Column: {h || `Column ${ci + 1}`}
-                          </option>
-                        ))}
-                      </select>
+                        options={[
+                          { value: 'literal', label: 'Fixed text…' },
+                          ...sheet.headers.map((h, ci) => ({
+                            value: `col:${ci}`,
+                            label: `Column: ${h || `Column ${ci + 1}`}`,
+                          })),
+                        ]}
+                        className="w-44"
+                      />
                       {v.mode === 'literal' && (
                         <input
                           value={v.value}

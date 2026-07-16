@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { TemplateDto } from '@nrw/shared';
 import { api } from '@/lib/api';
 import { IconClose } from './icons';
+import { GlassSelect } from './GlassSelect';
 
 export function NewChatModal({
   onClose,
@@ -85,19 +86,16 @@ export function NewChatModal({
 
           <div>
             <label className="mb-1 block text-sm font-medium">Template</label>
-            <select
-              required
+            <GlassSelect
               value={templateId}
-              onChange={(e) => onTemplateChange(e.target.value)}
-              className="w-full glass-input rounded-xl px-3 py-2"
-            >
-              <option value="">Select an approved template…</option>
-              {approved.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name} ({t.language})
-                </option>
-              ))}
-            </select>
+              onChange={onTemplateChange}
+              options={approved.map((t) => ({
+                value: t.id,
+                label: `${t.name} (${t.language})`,
+              }))}
+              placeholder="Select an approved template…"
+              className="w-full"
+            />
             {approved.length === 0 && (
               <p className="mt-1 text-xs text-gray-400">
                 No approved templates — sync them on the Templates page.

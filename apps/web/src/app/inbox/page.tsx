@@ -134,7 +134,7 @@ export default function InboxPage() {
   return (
     <div className="flex h-screen">
       <AppSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="page-transition flex flex-1 flex-col overflow-hidden">
         <PageHeader
           title="Inbox"
           actions={

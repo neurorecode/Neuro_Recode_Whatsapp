@@ -8,6 +8,7 @@ import { useRequireAuth } from '@/lib/useRequireAuth';
 import { useAuth } from '@/lib/auth';
 import { AppSidebar } from '@/components/AppSidebar';
 import { PageHeader } from '@/components/PageHeader';
+import { GlassSelect } from '@/components/GlassSelect';
 
 function AgentsSection({ isAdmin }: { isAdmin: boolean }) {
   const queryClient = useQueryClient();
@@ -71,14 +72,15 @@ function AgentsSection({ isAdmin }: { isAdmin: boolean }) {
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             className="glass-input rounded-xl px-3 py-2 text-sm"
           />
-          <select
+          <GlassSelect
             value={form.role}
-            onChange={(e) => setForm({ ...form, role: e.target.value })}
-            className="glass-input rounded-xl px-3 py-2 text-sm"
-          >
-            <option value="agent">Agent</option>
-            <option value="admin">Admin</option>
-          </select>
+            onChange={(v) => setForm({ ...form, role: v })}
+            options={[
+              { value: 'agent', label: 'Agent' },
+              { value: 'admin', label: 'Admin' },
+            ]}
+            className="w-full"
+          />
           <button
             type="submit"
             disabled={busy}
@@ -178,7 +180,7 @@ export default function SettingsPage() {
   return (
     <div className="flex h-screen">
       <AppSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="page-transition flex flex-1 flex-col overflow-hidden">
         <PageHeader title="Settings" subtitle="Manage agents and quick replies." />
         <div className="grid flex-1 gap-6 overflow-y-auto px-8 pb-8 md:grid-cols-2">
           <AgentsSection isAdmin={agent?.role === 'admin'} />

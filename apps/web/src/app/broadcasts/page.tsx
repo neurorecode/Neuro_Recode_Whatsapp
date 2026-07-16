@@ -10,6 +10,7 @@ import { useRequireAuth } from '@/lib/useRequireAuth';
 import { AppSidebar } from '@/components/AppSidebar';
 import { PageHeader } from '@/components/PageHeader';
 import { ImportBroadcastModal } from '@/components/ImportBroadcastModal';
+import { GlassSelect } from '@/components/GlassSelect';
 
 export default function BroadcastsPage() {
   const { ready } = useRequireAuth();
@@ -80,7 +81,7 @@ export default function BroadcastsPage() {
   return (
     <div className="flex h-screen">
       <AppSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="page-transition flex flex-1 flex-col overflow-hidden">
         <PageHeader
           title="Broadcasts"
           subtitle="Send an approved template to opted-in contacts, filtered by tag."
@@ -120,19 +121,16 @@ export default function BroadcastsPage() {
 
             <div>
               <label className="mb-1 block text-sm font-medium">Template (approved only)</label>
-              <select
-                required
+              <GlassSelect
                 value={templateId}
-                onChange={(e) => onTemplateChange(e.target.value)}
-                className="w-full glass-input rounded-xl px-3 py-2"
-              >
-                <option value="">Select a template…</option>
-                {approvedTemplates.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name} ({t.language})
-                  </option>
-                ))}
-              </select>
+                onChange={onTemplateChange}
+                options={approvedTemplates.map((t) => ({
+                  value: t.id,
+                  label: `${t.name} (${t.language})`,
+                }))}
+                placeholder="Select a template…"
+                className="w-full"
+              />
               {approvedTemplates.length === 0 && (
                 <p className="mt-1 text-xs text-gray-400">
                   No approved templates yet — sync them on the Templates page.
