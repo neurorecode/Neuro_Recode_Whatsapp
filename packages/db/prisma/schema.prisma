@@ -75,11 +75,14 @@ model Contact {
   // last time the customer messaged us — drives the 24h service window
   lastInboundAt   DateTime?
   windowExpiresAt DateTime?
+  // first-contact greeting sent (so we greet a contact only once, ever)
+  greetedAt   DateTime?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   conversations       Conversation[]
   broadcastRecipients BroadcastRecipient[]
+  sequenceEnrollments SequenceEnrollment[]
 
   @@index([waId])
 }
@@ -114,6 +117,8 @@ model Conversation {
   lastMessageAt   DateTime?
   lastMessageText String?
   unreadCount     Int                @default(0)
+  // last time an automation (greeting/away/keyword) auto-replied here — for cooldown
+  lastAutoReplyAt DateTime?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
@@ -238,7 +243,8 @@ model Template {
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
-  broadcasts Broadcast[]
+  broadcasts    Broadcast[]
+  sequenceSteps SequenceStep[]
 
   @@unique([name, language])
 }
@@ -336,4 +342,80 @@ model WebhookEvent {
   createdAt   DateTime @default(now())
 
   @@index([createdAt])
+}
+
+// ---------------- Automation ----------------
+
+// Singleton config row (id = "default") for greeting / away / business hours.
+model AutomationConfig {
+  id                   String   @id @default("default")
+  timezone             String   @default("Asia/Kolkata")
+  // businessHours: [{ day: 0-6 (Sun=0), enabled: bool, open: "09:00", close: "18:00" }]
+  businessHours        Json?
+  greetingEnabled      Boolean  @default(false)
+  greetingText         String?
+  awayEnabled          Boolean  @default(false)
+  awayText             String?
+  // don't auto-reply more than once per this many minutes per conversation
+  autoReplyCooldownMin Int      @default(60)
+  updatedAt            DateTime @updatedAt
+}
+
+model AutoReplyRule {
+  id        String   @id @default(cuid())
+  name      String
+  enabled   Boolean  @default(true)
+  // contains | exact | starts_with
+  matchType String   @default("contains")
+  keywords  String[] @default([])
+  replyText String
+  priority  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([enabled])
+}
+
+model Sequence {
+  id         String   @id @default(cuid())
+  name       String
+  enabled    Boolean  @default(true)
+  // how contacts join: manual | first_contact | keyword | tag
+  trigger    String   @default("manual")
+  triggerTag String?
+  keywords   String[] @default([])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  steps       SequenceStep[]
+  enrollments SequenceEnrollment[]
+}
+
+model SequenceStep {
+  id         String   @id @default(cuid())
+  sequenceId String
+  sequence   Sequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  order      Int
+  // delay after enrollment (step 0) or after the previous step, in hours
+  delayHours Int      @default(24)
+  templateId String
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  bodyParams String[] @default([])
+
+  @@index([sequenceId])
+}
+
+model SequenceEnrollment {
+  id          String    @id @default(cuid())
+  sequenceId  String
+  sequence    Sequence  @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  contactId   String
+  contact     Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  currentStep Int       @default(0)
+  // active | completed | cancelled
+  status      String    @default("active")
+  nextRunAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([sequenceId, contactId])
+  @@index([status, nextRunAt])
 }

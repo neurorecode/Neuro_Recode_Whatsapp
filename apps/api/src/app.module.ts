@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import configuration from './config/configuration';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
@@ -14,11 +16,14 @@ import { AgentsModule } from './agents/agents.module';
 import { CannedModule } from './canned/canned.module';
 import { MediaModule } from './media/media.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { AutomationModule } from './automation/automation.module';
 import { HealthController } from './health.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
+    EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     PrismaModule,
     RedisModule,
     MediaModule,
@@ -32,6 +37,7 @@ import { HealthController } from './health.controller';
     AgentsModule,
     CannedModule,
     WhatsappModule,
+    AutomationModule,
   ],
   controllers: [HealthController],
 })

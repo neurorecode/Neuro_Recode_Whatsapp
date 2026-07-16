@@ -12,5 +12,6 @@ import { RealtimeModule } from '../realtime/realtime.module';
   imports: [WhatsappModule, ContactsModule, TemplatesModule, RealtimeModule],
   providers: [BroadcastsService, BroadcastQueue, BroadcastProcessor],
   controllers: [BroadcastsController],
+  exports: [BroadcastsService],
 })
 export class BroadcastsModule {}

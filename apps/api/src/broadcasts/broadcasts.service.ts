@@ -9,6 +9,7 @@ export interface CreateBroadcastInput {
   templateId: string;
   tags: string[];
   bodyParams: string[];
+  scheduledAt?: string | null;
 }
 
 export interface ImportRecipientInput {
@@ -23,6 +24,15 @@ export interface CreateImportBroadcastInput {
   templateId: string;
   listTag?: string;
   recipients: ImportRecipientInput[];
+  scheduledAt?: string | null;
+}
+
+/** Parse a future ISO timestamp; returns null if absent or already past. */
+function futureDate(value?: string | null): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return null;
+  return d.getTime() > Date.now() ? d : null;
 }
 
 const EMPTY_COUNTS = { queued: 0, sent: 0, delivered: 0, read: 0, failed: 0 };
@@ -60,6 +70,7 @@ export class BroadcastsService {
       throw new BadRequestException('No opted-in contacts match the selected tags');
     }
 
+    const scheduledAt = futureDate(input.scheduledAt);
     const broadcast = await this.prisma.broadcast.create({
       data: {
         name: input.name,
@@ -68,18 +79,48 @@ export class BroadcastsService {
           tags: input.tags ?? [],
           bodyParams: input.bodyParams ?? [],
         } as Prisma.InputJsonValue,
-        status: 'running',
+        status: scheduledAt ? 'scheduled' : 'running',
+        scheduledAt,
         recipients: { create: audience.map((a) => ({ contactId: a.id })) },
       },
       include: { recipients: { select: { id: true } } },
     });
 
-    await this.queue.enqueue(
-      broadcast.id,
-      broadcast.recipients.map((r) => r.id),
-    );
+    // Scheduled broadcasts wait for the cron tick; immediate ones enqueue now.
+    if (!scheduledAt) {
+      await this.queue.enqueue(
+        broadcast.id,
+        broadcast.recipients.map((r) => r.id),
+      );
+    }
 
     return this.get(broadcast.id);
+  }
+
+  /** Fire any scheduled broadcasts whose time has arrived (called by the cron tick). */
+  async fireDueScheduled(): Promise<void> {
+    const due = await this.prisma.broadcast.findMany({
+      where: { status: 'scheduled', scheduledAt: { lte: new Date() } },
+      include: { recipients: { select: { id: true } } },
+    });
+    for (const b of due) {
+      await this.prisma.broadcast.update({ where: { id: b.id }, data: { status: 'running' } });
+      await this.queue.enqueue(
+        b.id,
+        b.recipients.map((r) => r.id),
+      );
+    }
+  }
+
+  /** Cancel a broadcast that hasn't started yet. */
+  async cancel(id: string) {
+    const b = await this.prisma.broadcast.findUnique({ where: { id } });
+    if (!b) throw new NotFoundException('Broadcast not found');
+    if (b.status !== 'scheduled') {
+      throw new BadRequestException('Only scheduled broadcasts can be cancelled');
+    }
+    await this.prisma.broadcast.update({ where: { id }, data: { status: 'cancelled' } });
+    return this.get(id);
   }
 
   /**
@@ -135,6 +176,7 @@ export class BroadcastsService {
       recipientRows.push({ contactId: contact.id, params: (r.params ?? []).map((p) => p ?? '') });
     }
 
+    const scheduledAt = futureDate(input.scheduledAt);
     const broadcast = await this.prisma.broadcast.create({
       data: {
         name: input.name,
@@ -145,16 +187,19 @@ export class BroadcastsService {
           imported: byWaId.size,
           skipped: invalid,
         } as Prisma.InputJsonValue,
-        status: 'running',
+        status: scheduledAt ? 'scheduled' : 'running',
+        scheduledAt,
         recipients: { create: recipientRows },
       },
       include: { recipients: { select: { id: true } } },
     });
 
-    await this.queue.enqueue(
-      broadcast.id,
-      broadcast.recipients.map((r) => r.id),
-    );
+    if (!scheduledAt) {
+      await this.queue.enqueue(
+        broadcast.id,
+        broadcast.recipients.map((r) => r.id),
+      );
+    }
 
     return { ...(await this.get(broadcast.id)), imported: byWaId.size, skipped: invalid };
   }
@@ -182,6 +227,7 @@ export class BroadcastsService {
       name: b.name,
       status: b.status,
       createdAt: b.createdAt.toISOString(),
+      scheduledAt: b.scheduledAt?.toISOString() ?? null,
       templateName: b.template.name,
       total: b._count.recipients,
       counts: countsByBroadcast.get(b.id) ?? { ...EMPTY_COUNTS },
@@ -206,6 +252,7 @@ export class BroadcastsService {
       name: b.name,
       status: b.status,
       createdAt: b.createdAt.toISOString(),
+      scheduledAt: b.scheduledAt?.toISOString() ?? null,
       template: { id: b.template.id, name: b.template.name, language: b.template.language },
       audienceFilter: b.audienceFilter,
       total: b.recipients.length,

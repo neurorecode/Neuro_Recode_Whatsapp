@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { WhatsappService } from './whatsapp.service';
@@ -24,6 +25,7 @@ export class WhatsappIngestService {
     private readonly realtime: RealtimeGateway,
     private readonly whatsapp: WhatsappService,
     private readonly storage: MediaStorageService,
+    private readonly events: EventEmitter2,
   ) {}
 
   async handleWebhook(body: WhatsAppWebhookBody): Promise<void> {
@@ -77,6 +79,11 @@ export class WhatsappIngestService {
     }
 
     const now = new Date();
+    // Did this contact exist before this message? (drives first-contact automations)
+    const priorContact = await this.prisma.contact.findUnique({
+      where: { waId: msg.from },
+      select: { id: true },
+    });
     const contact = await this.prisma.contact.upsert({
       where: { waId: msg.from },
       create: {
@@ -165,6 +172,14 @@ export class WhatsappIngestService {
       lastMessageAt: updated.lastMessageAt?.toISOString() ?? null,
       lastMessageText: updated.lastMessageText,
       assigneeAgentId: updated.assigneeAgentId,
+    });
+
+    // Fire automations (greeting / away / keyword / opt-out / sequence triggers).
+    this.events.emit('inbound.text', {
+      conversationId: conversation.id,
+      contactId: contact.id,
+      text: body ?? '',
+      isNewContact: !priorContact,
     });
   }
 

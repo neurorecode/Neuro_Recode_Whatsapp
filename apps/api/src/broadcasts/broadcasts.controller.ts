@@ -29,6 +29,10 @@ class CreateBroadcastDto {
   @IsArray()
   @IsString({ each: true })
   bodyParams?: string[];
+
+  @IsOptional()
+  @IsString()
+  scheduledAt?: string;
 }
 
 class ImportRecipientDto {
@@ -67,6 +71,10 @@ class ImportBroadcastDto {
   @ValidateNested({ each: true })
   @Type(() => ImportRecipientDto)
   recipients: ImportRecipientDto[];
+
+  @IsOptional()
+  @IsString()
+  scheduledAt?: string;
 }
 
 @UseGuards(JwtAuthGuard)
@@ -91,6 +99,7 @@ export class BroadcastsController {
       templateId: dto.templateId,
       tags: dto.tags ?? [],
       bodyParams: dto.bodyParams ?? [],
+      scheduledAt: dto.scheduledAt,
     });
   }
 
@@ -101,6 +110,12 @@ export class BroadcastsController {
       templateId: dto.templateId,
       listTag: dto.listTag,
       recipients: dto.recipients,
+      scheduledAt: dto.scheduledAt,
     });
+  }
+
+  @Post(':id/cancel')
+  cancel(@Param('id') id: string) {
+    return this.broadcasts.cancel(id);
   }
 }
