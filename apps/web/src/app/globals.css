@@ -19,29 +19,31 @@ body {
   background-attachment: fixed;
 }
 
-/* Background artwork at 50% opacity, layered over the soft canvas so text stays readable.
-   Uses bg-purple.png if you add one at apps/web/public/, otherwise the bundled
-   bg-purple.svg. */
+/* Background artwork, full-bleed and fully visible with a slight blur.
+   The negative inset + scale keep the blurred edges off-screen so the image
+   always covers the whole viewport with no gap.
+   Uses bg-purple.png if you add one at apps/web/public/, otherwise bg-purple.svg. */
 body::before {
   content: '';
   position: fixed;
-  inset: 0;
+  inset: -20px;
   z-index: -1;
   background-image: url('/bg-purple.png'), url('/bg-purple.svg');
   background-size: cover, cover;
-  background-position: center, center;
+  background-position: center center, center center;
   background-repeat: no-repeat, no-repeat;
-  background-attachment: fixed, fixed;
-  opacity: 0.5;
+  opacity: 1;
+  filter: blur(4px);
+  transform: scale(1.06);
   pointer-events: none;
 }
-/* Gentle white veil to lift text contrast over busy/bright imagery */
+/* Barely-there veil so text over empty areas keeps a little contrast */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.12) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
   pointer-events: none;
 }
 
