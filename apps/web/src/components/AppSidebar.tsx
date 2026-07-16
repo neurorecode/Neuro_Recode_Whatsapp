@@ -11,6 +11,7 @@ import {
   IconSettings,
   IconLogout,
   IconFlow,
+  IconBolt,
 } from './icons';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -27,6 +28,7 @@ const GROUPS: { title: string; items: Item[] }[] = [
       { href: '/templates', label: 'Templates', icon: IconTemplate },
       { href: '/broadcasts', label: 'Broadcasts', icon: IconMegaphone },
       { href: '/sequences', label: 'Sequences', icon: IconFlow },
+      { href: '/automation', label: 'Automation', icon: IconBolt },
     ],
   },
   {
