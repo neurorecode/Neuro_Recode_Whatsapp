@@ -7,6 +7,7 @@ import {
   WhatsAppWebhookBody,
   WhatsAppChangeValue,
   WhatsAppInboundMessage,
+  WhatsAppEchoMessage,
   WhatsAppStatus,
   WhatsAppContact,
 } from '@nrw/shared';
@@ -29,11 +30,15 @@ export class WhatsappIngestService {
     if (body.object !== 'whatsapp_business_account') return;
     for (const entry of body.entry ?? []) {
       for (const change of entry.changes ?? []) {
-        if (change.field !== 'messages') continue;
+        if (change.field !== 'messages' && change.field !== 'message_echoes') continue;
         const value = change.value;
         const contactsByWaId = this.indexContacts(value.contacts);
         for (const msg of value.messages ?? []) {
           await this.handleInboundMessage(msg, contactsByWaId.get(msg.from));
+        }
+        // Coexistence: messages the business sent from the WhatsApp Business app.
+        for (const echo of value.message_echoes ?? []) {
+          await this.handleEchoMessage(echo);
         }
         for (const status of value.statuses ?? []) {
           await this.handleStatus(status);
@@ -104,24 +109,7 @@ export class WhatsappIngestService {
     const timestamp = new Date(parseInt(msg.timestamp, 10) * 1000);
 
     // Download + store any media so it survives (Meta media URLs expire ~5 min).
-    let mediaKey: string | null = null;
-    let mediaMime: string | null = null;
-    let mediaFilename: string | null = null;
-    const descriptor = this.mediaDescriptor(msg);
-    if (descriptor) {
-      try {
-        const { url, mime } = await this.whatsapp.getMediaUrl(descriptor.id);
-        const buf = await this.whatsapp.downloadMedia(url);
-        const key = `inbound/${descriptor.id}`;
-        const finalMime = mime || descriptor.mime || 'application/octet-stream';
-        await this.storage.put(key, buf, finalMime);
-        mediaKey = key;
-        mediaMime = finalMime;
-        mediaFilename = descriptor.filename ?? null;
-      } catch (e: any) {
-        this.logger.warn(`media download failed for ${msg.id}: ${e?.message}`);
-      }
-    }
+    const { mediaKey, mediaMime, mediaFilename } = await this.storeMedia(msg, 'inbound');
 
     const message = await this.prisma.message.create({
       data: {
@@ -178,6 +166,117 @@ export class WhatsappIngestService {
       lastMessageText: updated.lastMessageText,
       assigneeAgentId: updated.assigneeAgentId,
     });
+  }
+
+  /**
+   * Coexistence echo: a message the business sent from the WhatsApp Business
+   * phone app. Store it as an OUTBOUND message so it shows in the web thread.
+   */
+  private async handleEchoMessage(echo: WhatsAppEchoMessage): Promise<void> {
+    const customerWaId = echo.to;
+    if (!customerWaId) return; // can't attribute the echo to a contact
+
+    if (await this.alreadyProcessed(`echo:${echo.id}`)) {
+      this.logger.debug(`duplicate echo ${echo.id}, skipping`);
+      return;
+    }
+    // A message we already recorded (e.g. sent via our own API) — don't dupe it.
+    const existing = await this.prisma.message.findUnique({ where: { wamid: echo.id } });
+    if (existing) return;
+
+    const contact = await this.prisma.contact.upsert({
+      where: { waId: customerWaId },
+      create: { waId: customerWaId, phone: customerWaId },
+      update: {},
+    });
+
+    let conversation = await this.prisma.conversation.findFirst({
+      where: { contactId: contact.id, status: { in: ['open', 'pending'] } },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!conversation) {
+      conversation = await this.prisma.conversation.create({
+        data: { contactId: contact.id, status: 'open' },
+      });
+    }
+
+    const { type, body } = this.extractContent(echo);
+    const timestamp = new Date(parseInt(echo.timestamp, 10) * 1000);
+    const { mediaKey, mediaMime, mediaFilename } = await this.storeMedia(echo, 'echo');
+
+    const message = await this.prisma.message.create({
+      data: {
+        wamid: echo.id,
+        conversationId: conversation.id,
+        direction: 'outbound',
+        type,
+        body,
+        mediaKey,
+        mediaMime,
+        mediaFilename,
+        // Sent from the phone app, not by a web agent.
+        status: 'sent',
+        senderAgentId: null,
+        raw: echo as unknown as Prisma.InputJsonValue,
+        timestamp,
+      },
+    });
+
+    // Outbound echo doesn't change unread count or the 24h window.
+    const updated = await this.prisma.conversation.update({
+      where: { id: conversation.id },
+      data: { lastMessageAt: timestamp, lastMessageText: body ?? `[${type}]` },
+    });
+
+    this.realtime.emitNewMessage({
+      conversationId: conversation.id,
+      message: {
+        id: message.id,
+        wamid: message.wamid,
+        direction: 'outbound',
+        type: message.type,
+        body: message.body,
+        mediaUrl: mediaKey ? `/api/media/${message.id}` : null,
+        status: message.status,
+        senderAgentId: null,
+        timestamp: timestamp.toISOString(),
+      },
+      contact: {
+        id: contact.id,
+        waId: contact.waId,
+        displayName: contact.displayName,
+        profileName: contact.profileName,
+      },
+    });
+
+    this.realtime.emitConversationUpdated({
+      id: updated.id,
+      status: updated.status,
+      unreadCount: updated.unreadCount,
+      lastMessageAt: updated.lastMessageAt?.toISOString() ?? null,
+      lastMessageText: updated.lastMessageText,
+      assigneeAgentId: updated.assigneeAgentId,
+    });
+  }
+
+  /** Download + persist a message's media (if any) to object storage. */
+  private async storeMedia(
+    msg: WhatsAppInboundMessage,
+    prefix: 'inbound' | 'echo',
+  ): Promise<{ mediaKey: string | null; mediaMime: string | null; mediaFilename: string | null }> {
+    const descriptor = this.mediaDescriptor(msg);
+    if (!descriptor) return { mediaKey: null, mediaMime: null, mediaFilename: null };
+    try {
+      const { url, mime } = await this.whatsapp.getMediaUrl(descriptor.id);
+      const buf = await this.whatsapp.downloadMedia(url);
+      const key = `${prefix}/${descriptor.id}`;
+      const finalMime = mime || descriptor.mime || 'application/octet-stream';
+      await this.storage.put(key, buf, finalMime);
+      return { mediaKey: key, mediaMime: finalMime, mediaFilename: descriptor.filename ?? null };
+    } catch (e: any) {
+      this.logger.warn(`media download failed for ${msg.id}: ${e?.message}`);
+      return { mediaKey: null, mediaMime: null, mediaFilename: null };
+    }
   }
 
   private async handleStatus(status: WhatsAppStatus): Promise<void> {

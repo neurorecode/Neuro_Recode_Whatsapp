@@ -25,6 +25,9 @@ export interface WhatsAppChangeValue {
   };
   contacts?: WhatsAppContact[];
   messages?: WhatsAppInboundMessage[];
+  // Coexistence: echoes of messages the business sent from the WhatsApp
+  // Business phone app (delivered under the `message_echoes` webhook field).
+  message_echoes?: WhatsAppEchoMessage[];
   statuses?: WhatsAppStatus[];
   errors?: WhatsAppError[];
 }
@@ -50,6 +53,15 @@ export interface WhatsAppInboundMessage {
   interactive?: unknown;
   context?: { from: string; id: string };
   errors?: WhatsAppError[];
+}
+
+/**
+ * A message the business sent from the WhatsApp Business app (coexistence mode).
+ * Same content shape as an inbound message, but `to` carries the customer wa_id
+ * (the business number is in `from`).
+ */
+export interface WhatsAppEchoMessage extends WhatsAppInboundMessage {
+  to?: string;
 }
 
 export interface WhatsAppMediaObject {
