@@ -7,6 +7,7 @@ import type { TemplateDto } from '@nrw/shared';
 import { api } from '@/lib/api';
 import { IconClose } from './icons';
 import { GlassSelect, type GlassOption } from './GlassSelect';
+import { GlassDateTimePicker } from './GlassDateTimePicker';
 
 const CATEGORY_DOT: Record<string, string> = {
   utility: 'bg-blue-500',
@@ -215,11 +216,11 @@ export function ImportBroadcastModal({
                 Schedule for{' '}
                 <span className="font-normal text-gray-400">(optional — blank sends now)</span>
               </label>
-              <input
-                type="datetime-local"
+              <GlassDateTimePicker
                 value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
-                className="w-full glass-input rounded-xl px-3 py-2"
+                onChange={setScheduledAt}
+                placeholder="Send now"
+                className="w-full"
               />
             </div>
           </div>
