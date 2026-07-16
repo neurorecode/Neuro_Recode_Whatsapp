@@ -33,8 +33,8 @@ body::before {
   background-position: center center, center center;
   background-repeat: no-repeat, no-repeat;
   opacity: 1;
-  filter: blur(4px);
-  transform: scale(1.06);
+  filter: blur(1.2px);
+  transform: scale(1.03);
   pointer-events: none;
 }
 /* Barely-there veil so text over empty areas keeps a little contrast */
