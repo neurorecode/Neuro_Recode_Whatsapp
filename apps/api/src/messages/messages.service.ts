@@ -112,6 +112,70 @@ export class MessagesService {
   }
 
   /**
+   * Send an approved template into an EXISTING conversation. Works whether or
+   * not the 24h window is open — templates are exactly how you re-engage a
+   * contact after the window closes.
+   */
+  async sendTemplateMessage(
+    conversationId: string,
+    agentId: string,
+    templateId: string,
+    bodyParams: string[],
+  ): Promise<MessageDto> {
+    const conversation = await this.conversations.getOrThrow(conversationId);
+    const template = await this.prisma.template.findUnique({ where: { id: templateId } });
+    if (!template || template.status !== 'approved') {
+      throw new BadRequestException('Choose an approved template');
+    }
+
+    const { bodyText, bodyVarCount } = parseBody(template.components);
+    const components =
+      bodyVarCount > 0
+        ? [
+            {
+              type: 'body',
+              parameters: (bodyParams ?? [])
+                .slice(0, bodyVarCount)
+                .map((text) => ({ type: 'text', text })),
+            },
+          ]
+        : undefined;
+
+    const rendered = renderTemplateBody(bodyText, bodyParams ?? []);
+    const pending = await this.prisma.message.create({
+      data: {
+        conversationId,
+        direction: 'outbound',
+        type: 'template',
+        body: rendered,
+        templateName: template.name,
+        status: 'queued',
+        senderAgentId: agentId,
+      },
+    });
+
+    try {
+      const { wamid } = await this.whatsapp.sendTemplate(
+        conversation.contact.waId,
+        template.name,
+        template.language,
+        components,
+      );
+      const sent = await this.prisma.message.update({
+        where: { id: pending.id },
+        data: { wamid, status: 'sent' },
+      });
+      await this.finishOutbound(conversation, sent, rendered ?? `[template: ${template.name}]`);
+      return this.toDto(sent);
+    } catch (err: any) {
+      await this.markFailed(pending.id, err);
+      throw new BadRequestException(
+        err?.response?.data?.error?.message ?? 'Failed to send template',
+      );
+    }
+  }
+
+  /**
    * Start a conversation with a NEW number by sending an approved template
    * (required — a fresh number has no open 24h window). If the number isn't on
    * WhatsApp the send fails and we surface the error.

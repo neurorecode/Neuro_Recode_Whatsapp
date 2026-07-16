@@ -4,23 +4,27 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { CannedResponseDto } from '@nrw/shared';
 import { api } from '@/lib/api';
-import { IconPaperclip, IconReply, IconSend, IconClose } from './icons';
+import { IconPaperclip, IconReply, IconSend, IconClose, IconTemplate } from './icons';
+import { TemplatePickerModal } from './TemplatePickerModal';
 
 export function Composer({
   disabled,
   windowOpen,
   onSend,
   onSendMedia,
+  onSendTemplate,
 }: {
   disabled: boolean;
   windowOpen: boolean;
   onSend: (body: string) => Promise<void>;
   onSendMedia: (file: File, caption?: string) => Promise<void>;
+  onSendTemplate: (templateId: string, bodyParams: string[]) => Promise<void>;
 }) {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCanned, setShowCanned] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,9 +89,23 @@ export function Composer({
 
   if (!windowOpen) {
     return (
-      <div className="border-t border-white/40 bg-amber-50/50 p-3 text-center text-sm text-amber-800">
-        The 24-hour service window has closed — send an approved template (from Templates /
-        Broadcasts) to re-engage this contact.
+      <div className="border-t border-white/40 bg-amber-50/50 p-3">
+        <p className="text-center text-sm text-amber-800">
+          The 24-hour service window has closed — send an approved template to re-engage this contact.
+        </p>
+        <div className="mt-2 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setShowTemplates(true)}
+            className="flex items-center gap-2 rounded-full bg-gradient-to-r from-brand to-brand-dark px-4 py-2 text-sm font-medium text-white shadow-md shadow-brand/30 transition hover:shadow-brand/40"
+          >
+            <IconTemplate width={16} height={16} />
+            Send a template
+          </button>
+        </div>
+        {showTemplates && (
+          <TemplatePickerModal onClose={() => setShowTemplates(false)} onSend={onSendTemplate} />
+        )}
       </div>
     );
   }
@@ -217,6 +235,14 @@ export function Composer({
         >
           <IconReply width={20} height={20} />
         </button>
+        <button
+          type="button"
+          onClick={() => setShowTemplates(true)}
+          title="Send a template"
+          className="flex h-10 w-10 flex-none items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+        >
+          <IconTemplate width={20} height={20} />
+        </button>
         <input
           value={text}
           disabled={disabled}
@@ -239,6 +265,9 @@ export function Composer({
           <IconSend width={18} height={18} />
         </button>
       </div>
+      {showTemplates && (
+        <TemplatePickerModal onClose={() => setShowTemplates(false)} onSend={onSendTemplate} />
+      )}
     </div>
   );
 }

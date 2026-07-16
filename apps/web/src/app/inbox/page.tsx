@@ -124,6 +124,13 @@ export default function InboxPage() {
     queryClient.invalidateQueries({ queryKey: ['conversations'] });
   }
 
+  async function onSendTemplate(templateId: string, bodyParams: string[]) {
+    if (!selected) return;
+    await api.post(`/conversations/${selected.id}/messages/template`, { templateId, bodyParams });
+    queryClient.invalidateQueries({ queryKey: ['messages', selected.id] });
+    queryClient.invalidateQueries({ queryKey: ['conversations'] });
+  }
+
   const conversations = conversationsQuery.data ?? [];
   const messages = messagesQuery.data ?? [];
 
@@ -205,6 +212,7 @@ export default function InboxPage() {
                   windowOpen={selected.windowOpen}
                   onSend={onSend}
                   onSendMedia={onSendMedia}
+                  onSendTemplate={onSendTemplate}
                 />
               </>
             ) : (

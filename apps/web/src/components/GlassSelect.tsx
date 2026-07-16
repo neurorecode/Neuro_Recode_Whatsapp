@@ -47,18 +47,23 @@ export function GlassSelect({
     if (!open) return;
     const place = () => btnRef.current && setRect(btnRef.current.getBoundingClientRect());
     place();
-    const close = () => setOpen(false);
+    const onScroll = (e: Event) => {
+      // Scrolling inside the options panel itself must NOT close it.
+      if (panelRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    const onResize = () => setOpen(false);
     const onDoc = (e: MouseEvent) => {
       const t = e.target as Node;
       if (btnRef.current?.contains(t) || panelRef.current?.contains(t)) return;
       setOpen(false);
     };
-    window.addEventListener('scroll', close, true);
-    window.addEventListener('resize', close);
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onResize);
     document.addEventListener('mousedown', onDoc);
     return () => {
-      window.removeEventListener('scroll', close, true);
-      window.removeEventListener('resize', close);
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onResize);
       document.removeEventListener('mousedown', onDoc);
     };
   }, [open]);

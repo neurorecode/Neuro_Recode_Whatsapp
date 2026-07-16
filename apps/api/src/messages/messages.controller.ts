@@ -10,7 +10,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { IsString, MinLength } from 'class-validator';
+import { IsArray, IsOptional, IsString, MinLength } from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { MessagesService } from './messages.service';
 
@@ -18,6 +18,17 @@ class SendMessageDto {
   @IsString()
   @MinLength(1)
   body: string;
+}
+
+class SendTemplateDto {
+  @IsString()
+  @MinLength(1)
+  templateId: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  bodyParams?: string[];
 }
 
 // WhatsApp media caps vary by type (docs up to 100MB); keep a sane upload limit.
@@ -31,6 +42,11 @@ export class MessagesController {
   @Post()
   send(@Param('id') id: string, @Body() dto: SendMessageDto, @Request() req: any) {
     return this.messages.sendText(id, req.user.id, dto.body);
+  }
+
+  @Post('template')
+  sendTemplate(@Param('id') id: string, @Body() dto: SendTemplateDto, @Request() req: any) {
+    return this.messages.sendTemplateMessage(id, req.user.id, dto.templateId, dto.bodyParams ?? []);
   }
 
   @Post('media')
