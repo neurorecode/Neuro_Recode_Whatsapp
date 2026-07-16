@@ -179,6 +179,113 @@ body::after {
   animation: dropdownPop 0.16s ease-out both;
 }
 
+/* ============================================================
+   DARK THEME — scoped to :root[data-theme="dark"].
+   Re-skins the shared glass classes and remaps the specific
+   Tailwind color utilities the app uses, so text stays legible.
+   ============================================================ */
+:root[data-theme='dark'] body {
+  color: #e5e7eb;
+  background:
+    radial-gradient(900px 520px at 20% 12%, rgba(99, 102, 241, 0.18), transparent 55%),
+    radial-gradient(820px 620px at 82% 88%, rgba(139, 92, 246, 0.16), transparent 55%),
+    linear-gradient(125deg, #0f1117 0%, #171a27 45%, #0d0f19 100%);
+}
+/* Dim the artwork + darken the veil so the dark UI reads clearly */
+:root[data-theme='dark'] body::before {
+  opacity: 0.16;
+}
+:root[data-theme='dark'] body::after {
+  background: linear-gradient(180deg, rgba(6, 8, 15, 0.5) 0%, rgba(6, 8, 15, 0.68) 100%);
+}
+
+/* Glass surfaces */
+:root[data-theme='dark'] .glass {
+  background: rgba(30, 33, 48, 0.55);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+:root[data-theme='dark'] .glass-soft {
+  background: rgba(30, 33, 48, 0.4);
+}
+:root[data-theme='dark'] .glass-card {
+  background: rgba(24, 27, 41, 0.74);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 64px -30px rgba(0, 0, 0, 0.75);
+}
+:root[data-theme='dark'] .glass-input {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #e5e7eb;
+}
+:root[data-theme='dark'] .glass-scrim {
+  background: rgba(0, 0, 0, 0.55);
+}
+:root[data-theme='dark'] .soft-control,
+:root[data-theme='dark'] .soft-btn {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #e5e7eb;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 6px 16px -10px rgba(0, 0, 0, 0.6);
+}
+
+/* Text color remaps */
+:root[data-theme='dark'] .text-gray-900 { color: #f3f4f6; }
+:root[data-theme='dark'] .text-gray-800 { color: #e5e7eb; }
+:root[data-theme='dark'] .text-gray-700 { color: #d6dbe3; }
+:root[data-theme='dark'] .text-gray-600 { color: #c2cad6; }
+:root[data-theme='dark'] .text-gray-500 { color: #9aa4b2; }
+:root[data-theme='dark'] .text-gray-400 { color: #808a9b; }
+:root[data-theme='dark'] .text-gray-300 { color: #cbd5e1; }
+/* Brand text lifted for contrast on dark */
+:root[data-theme='dark'] .text-brand { color: #34d399; }
+:root[data-theme='dark'] .text-brand-dark { color: #5eead4; }
+
+/* White / gray backgrounds → subtle light translucency on dark */
+:root[data-theme='dark'] .bg-white { background-color: #1b1e2a; }
+:root[data-theme='dark'] .bg-white\/80 { background-color: rgba(255, 255, 255, 0.12); }
+:root[data-theme='dark'] .bg-white\/75 { background-color: rgba(255, 255, 255, 0.11); }
+:root[data-theme='dark'] .bg-white\/70 { background-color: rgba(255, 255, 255, 0.1); }
+:root[data-theme='dark'] .bg-white\/60 { background-color: rgba(255, 255, 255, 0.09); }
+:root[data-theme='dark'] .bg-white\/55 { background-color: rgba(255, 255, 255, 0.08); }
+:root[data-theme='dark'] .bg-white\/50 { background-color: rgba(255, 255, 255, 0.07); }
+:root[data-theme='dark'] .bg-white\/40 { background-color: rgba(255, 255, 255, 0.06); }
+:root[data-theme='dark'] .bg-white\/35 { background-color: rgba(255, 255, 255, 0.05); }
+:root[data-theme='dark'] .bg-white\/30 { background-color: rgba(255, 255, 255, 0.05); }
+:root[data-theme='dark'] .bg-white\/25 { background-color: rgba(255, 255, 255, 0.04); }
+:root[data-theme='dark'] .bg-white\/20 { background-color: rgba(255, 255, 255, 0.04); }
+:root[data-theme='dark'] .bg-gray-50 { background-color: rgba(255, 255, 255, 0.04); }
+:root[data-theme='dark'] .bg-gray-100 { background-color: rgba(255, 255, 255, 0.07); }
+:root[data-theme='dark'] .bg-gray-200 { background-color: rgba(255, 255, 255, 0.1); }
+
+/* Chat bubbles — keep WhatsApp shape but dark-friendly greens */
+:root[data-theme='dark'] .bg-\[\#dcfce7\]\/80,
+:root[data-theme='dark'] .bg-\[\#dcfce7\],
+:root[data-theme='dark'] .bg-\[\#d9fdd3\] {
+  background-color: rgba(16, 70, 47, 0.85);
+}
+
+/* Borders */
+:root[data-theme='dark'] .border-gray-200 { border-color: rgba(255, 255, 255, 0.12); }
+:root[data-theme='dark'] .border-gray-300 { border-color: rgba(255, 255, 255, 0.16); }
+
+/* Hover states that assume light surfaces */
+:root[data-theme='dark'] .hover\:bg-white\/35:hover,
+:root[data-theme='dark'] .hover\:bg-white\/40:hover,
+:root[data-theme='dark'] .hover\:bg-white\/50:hover,
+:root[data-theme='dark'] .hover\:bg-white\/60:hover,
+:root[data-theme='dark'] .hover\:bg-white\/70:hover,
+:root[data-theme='dark'] .hover\:bg-white\/80:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+:root[data-theme='dark'] .hover\:bg-gray-100:hover { background-color: rgba(255, 255, 255, 0.08); }
+:root[data-theme='dark'] .hover\:bg-gray-200:hover { background-color: rgba(255, 255, 255, 0.12); }
+
+/* Placeholders + scrollbar */
+:root[data-theme='dark'] ::placeholder { color: #7d8798; }
+:root[data-theme='dark'] ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); }
+
 /* Smooth, soft global touches */
 * {
   -webkit-tap-highlight-color: transparent;

@@ -11,6 +11,7 @@ import {
   IconSettings,
   IconLogout,
 } from './icons';
+import { ThemeToggle } from './ThemeToggle';
 
 type Item = { href: string; label: string; icon: (p: any) => JSX.Element };
 
@@ -82,8 +83,14 @@ export function AppSidebar() {
         ))}
       </nav>
 
+      {/* Theme toggle */}
+      <div className="mt-4 flex items-center justify-between rounded-2xl bg-white/50 px-3 py-2 ring-1 ring-white/50">
+        <span className="text-xs font-medium text-gray-500">Appearance</span>
+        <ThemeToggle />
+      </div>
+
       {/* Profile */}
-      <div className="mt-4 flex items-center gap-2 rounded-2xl bg-white/50 p-2 ring-1 ring-white/50">
+      <div className="mt-3 flex items-center gap-2 rounded-2xl bg-white/50 p-2 ring-1 ring-white/50">
         <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand-dark text-xs font-semibold text-white">
           {(agent?.name ?? 'NR').slice(0, 2).toUpperCase()}
         </div>
