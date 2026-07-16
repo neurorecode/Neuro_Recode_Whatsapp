@@ -7,6 +7,13 @@ import { api } from '@/lib/api';
 import { IconClose } from './icons';
 import { GlassSelect } from './GlassSelect';
 
+// Colored dot per WhatsApp template category, shown beside each option.
+const CATEGORY_DOT: Record<string, string> = {
+  utility: 'bg-blue-500',
+  marketing: 'bg-purple-500',
+  authentication: 'bg-emerald-500',
+};
+
 export function NewChatModal({
   onClose,
   onStarted,
@@ -92,6 +99,8 @@ export function NewChatModal({
               options={approved.map((t) => ({
                 value: t.id,
                 label: `${t.name} (${t.language})`,
+                hint: t.category.toUpperCase(),
+                dotClass: CATEGORY_DOT[t.category] ?? 'bg-gray-400',
               }))}
               placeholder="Select an approved template…"
               className="w-full"

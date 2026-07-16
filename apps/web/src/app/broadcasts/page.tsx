@@ -12,6 +12,12 @@ import { PageHeader } from '@/components/PageHeader';
 import { ImportBroadcastModal } from '@/components/ImportBroadcastModal';
 import { GlassSelect } from '@/components/GlassSelect';
 
+const CATEGORY_DOT: Record<string, string> = {
+  utility: 'bg-blue-500',
+  marketing: 'bg-purple-500',
+  authentication: 'bg-emerald-500',
+};
+
 export default function BroadcastsPage() {
   const { ready } = useRequireAuth();
   const router = useRouter();
@@ -127,6 +133,8 @@ export default function BroadcastsPage() {
                 options={approvedTemplates.map((t) => ({
                   value: t.id,
                   label: `${t.name} (${t.language})`,
+                  hint: t.category.toUpperCase(),
+                  dotClass: CATEGORY_DOT[t.category] ?? 'bg-gray-400',
                 }))}
                 placeholder="Select a template…"
                 className="w-full"

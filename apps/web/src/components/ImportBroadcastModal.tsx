@@ -8,6 +8,12 @@ import { api } from '@/lib/api';
 import { IconClose } from './icons';
 import { GlassSelect, type GlassOption } from './GlassSelect';
 
+const CATEGORY_DOT: Record<string, string> = {
+  utility: 'bg-blue-500',
+  marketing: 'bg-purple-500',
+  authentication: 'bg-emerald-500',
+};
+
 type ParsedSheet = { headers: string[]; rows: string[][] };
 
 // A template variable is filled from a spreadsheet column or a literal value.
@@ -146,7 +152,8 @@ export function ImportBroadcastModal({
   const templateOptions: GlassOption[] = approved.map((t) => ({
     value: t.id,
     label: `${t.name} (${t.language})`,
-    hint: `${t.bodyVarCount} var${t.bodyVarCount === 1 ? '' : 's'}`,
+    hint: `${t.category.toUpperCase()} · ${t.bodyVarCount} var${t.bodyVarCount === 1 ? '' : 's'}`,
+    dotClass: CATEGORY_DOT[t.category] ?? 'bg-gray-400',
   }));
   const columnOptions = (sheet?.headers ?? []).map((h, i) => ({
     value: String(i),
