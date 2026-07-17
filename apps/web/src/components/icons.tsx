@@ -115,6 +115,15 @@ export const IconSearch = (p: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+export const IconBot = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <rect x="4" y="8" width="16" height="12" rx="2" />
+    <path d="M12 8V5M9 3h6" />
+    <circle cx="9" cy="13" r="1" />
+    <circle cx="15" cy="13" r="1" />
+  </svg>
+);
+
 export const IconBolt = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}>
     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
