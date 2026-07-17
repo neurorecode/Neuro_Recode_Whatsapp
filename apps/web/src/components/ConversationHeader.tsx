@@ -1,9 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { AgentDto, ConversationListItem } from '@nrw/shared';
 import { api } from '@/lib/api';
-import { IconInfo, IconNote } from './icons';
+import { IconInfo, IconNote, IconSparkle, IconClose } from './icons';
 import { GlassSelect, type GlassOption } from './GlassSelect';
 
 function initials(name: string) {
@@ -33,6 +34,20 @@ export function ConversationHeader({
 }) {
   const c = conversation;
   const name = c.contact.displayName || c.contact.profileName || c.contact.waId;
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryBusy, setSummaryBusy] = useState(false);
+
+  async function summarize() {
+    setSummaryBusy(true);
+    try {
+      const res = await api.post<{ summary: string }>(`/ai/conversations/${c.id}/summarize`);
+      setSummary(res.summary);
+    } catch (e: any) {
+      setSummary(e?.message ?? 'AI summary failed');
+    } finally {
+      setSummaryBusy(false);
+    }
+  }
 
   const agentsQuery = useQuery({
     queryKey: ['agents'],
@@ -56,6 +71,7 @@ export function ConversationHeader({
   ];
 
   return (
+    <>
     <header className="flex items-center justify-between gap-3 border-b border-white/40 bg-gradient-to-b from-white/40 to-white/15 px-5 py-3">
       {/* Contact identity */}
       <div className="flex min-w-0 items-center gap-3">
@@ -106,6 +122,16 @@ export function ConversationHeader({
         <div className="mx-1 h-6 w-px bg-white/50" />
 
         <button
+          onClick={summarize}
+          disabled={summaryBusy}
+          title="AI summary"
+          className={`flex h-9 w-9 items-center justify-center rounded-full soft-btn ${
+            summaryBusy ? 'animate-pulse text-brand' : 'text-gray-500'
+          }`}
+        >
+          <IconSparkle width={16} height={16} />
+        </button>
+        <button
           onClick={onToggleInfo}
           title="Contact details"
           className={`flex h-9 w-9 items-center justify-center rounded-full soft-btn ${
@@ -125,5 +151,17 @@ export function ConversationHeader({
         </button>
       </div>
     </header>
+    {summary && (
+      <div className="flex items-start gap-2 border-b border-white/40 bg-brand/5 px-5 py-2.5 text-sm text-gray-700">
+        <span className="mt-0.5 flex-none text-brand">
+          <IconSparkle width={16} height={16} />
+        </span>
+        <p className="flex-1">{summary}</p>
+        <button onClick={() => setSummary(null)} className="flex-none text-gray-400 hover:text-gray-600">
+          <IconClose width={16} height={16} />
+        </button>
+      </div>
+    )}
+    </>
   );
 }

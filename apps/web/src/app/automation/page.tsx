@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth';
 import { AppSidebar } from '@/components/AppSidebar';
 import { PageHeader } from '@/components/PageHeader';
 import { AutomationSettings } from '@/components/AutomationSettings';
+import { AiKnowledgeSettings } from '@/components/AiKnowledgeSettings';
 
 export default function AutomationPage() {
   const { ready } = useRequireAuth();
@@ -22,8 +23,9 @@ export default function AutomationPage() {
           title="Automation"
           subtitle="Greetings, away messages, business hours, and keyword auto-responses."
         />
-        <div className="flex-1 overflow-y-auto px-8 pb-8">
+        <div className="flex-1 space-y-6 overflow-y-auto px-8 pb-8">
           <AutomationSettings isAdmin={agent?.role === 'admin'} />
+          <AiKnowledgeSettings isAdmin={agent?.role === 'admin'} />
         </div>
       </div>
     </div>

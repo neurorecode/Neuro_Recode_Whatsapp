@@ -4,22 +4,25 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { CannedResponseDto } from '@nrw/shared';
 import { api } from '@/lib/api';
-import { IconPaperclip, IconReply, IconSend, IconClose, IconTemplate } from './icons';
+import { IconPaperclip, IconReply, IconSend, IconClose, IconTemplate, IconSparkle } from './icons';
 import { TemplatePickerModal } from './TemplatePickerModal';
 
 export function Composer({
   disabled,
   windowOpen,
+  conversationId,
   onSend,
   onSendMedia,
   onSendTemplate,
 }: {
   disabled: boolean;
   windowOpen: boolean;
+  conversationId: string;
   onSend: (body: string) => Promise<void>;
   onSendMedia: (file: File, caption?: string) => Promise<void>;
   onSendTemplate: (templateId: string, bodyParams: string[]) => Promise<void>;
 }) {
+  const [aiBusy, setAiBusy] = useState(false);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +67,20 @@ export function Composer({
     setError(null);
     setPendingFile(file);
     setPreviewUrl(file.type.startsWith('image/') ? URL.createObjectURL(file) : null);
+  }
+
+  async function aiDraft() {
+    if (aiBusy) return;
+    setAiBusy(true);
+    setError(null);
+    try {
+      const res = await api.post<{ draft: string }>(`/ai/conversations/${conversationId}/suggest`);
+      if (res.draft) setText(res.draft);
+    } catch (e: any) {
+      setError(e?.message ?? 'AI draft failed');
+    } finally {
+      setAiBusy(false);
+    }
   }
 
   function cancelMedia() {
@@ -242,6 +259,17 @@ export function Composer({
           className="flex h-10 w-10 flex-none items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
         >
           <IconTemplate width={20} height={20} />
+        </button>
+        <button
+          type="button"
+          onClick={aiDraft}
+          disabled={disabled || aiBusy}
+          title="AI draft reply"
+          className={`flex h-10 w-10 flex-none items-center justify-center rounded-full transition hover:bg-gray-100 disabled:opacity-50 ${
+            aiBusy ? 'animate-pulse text-brand' : 'text-gray-500 hover:text-brand'
+          }`}
+        >
+          <IconSparkle width={20} height={20} />
         </button>
         <input
           value={text}

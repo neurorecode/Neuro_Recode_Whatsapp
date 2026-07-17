@@ -115,6 +115,13 @@ export const IconSearch = (p: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+export const IconSparkle = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M12 3l1.6 4.6L18 9.2l-4.4 1.6L12 15l-1.6-4.2L6 9.2l4.4-1.6L12 3z" />
+    <path d="M18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14z" />
+  </svg>
+);
+
 export const IconBot = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}>
     <rect x="4" y="8" width="16" height="12" rx="2" />

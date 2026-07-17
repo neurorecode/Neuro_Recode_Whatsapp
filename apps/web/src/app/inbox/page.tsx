@@ -210,6 +210,7 @@ export default function InboxPage() {
                 <Composer
                   disabled={false}
                   windowOpen={selected.windowOpen}
+                  conversationId={selected.id}
                   onSend={onSend}
                   onSendMedia={onSendMedia}
                   onSendTemplate={onSendTemplate}
