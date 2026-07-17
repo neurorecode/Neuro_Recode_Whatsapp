@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SequencesService } from './sequences.service';
+import { FlowsService } from './flows.service';
 import { BroadcastsService } from '../broadcasts/broadcasts.service';
 
 /**
@@ -14,6 +15,7 @@ export class AutomationSchedulerService {
 
   constructor(
     private readonly sequences: SequencesService,
+    private readonly flows: FlowsService,
     private readonly broadcasts: BroadcastsService,
   ) {}
 
@@ -24,6 +26,7 @@ export class AutomationSchedulerService {
     try {
       await this.broadcasts.fireDueScheduled();
       await this.sequences.runDueSteps();
+      await this.flows.runDueDelays();
     } catch (e: any) {
       this.logger.warn(`scheduler tick failed: ${e?.message}`);
     } finally {

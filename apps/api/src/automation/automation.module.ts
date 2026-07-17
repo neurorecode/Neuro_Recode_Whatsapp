@@ -8,6 +8,8 @@ import { AutomationService } from './automation.service';
 import { AutomationController } from './automation.controller';
 import { SequencesService } from './sequences.service';
 import { SequencesController } from './sequences.controller';
+import { FlowsService } from './flows.service';
+import { FlowsController } from './flows.controller';
 import { AutomationSchedulerService } from './automation-scheduler.service';
 
 @Module({
@@ -16,8 +18,9 @@ import { AutomationSchedulerService } from './automation-scheduler.service';
     AutomationSenderService,
     AutomationService,
     SequencesService,
+    FlowsService,
     AutomationSchedulerService,
   ],
-  controllers: [AutomationController, SequencesController],
+  controllers: [AutomationController, SequencesController, FlowsController],
 })
 export class AutomationModule {}

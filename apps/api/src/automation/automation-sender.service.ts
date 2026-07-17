@@ -85,6 +85,53 @@ export class AutomationSenderService {
     await this.finish(convo.id, contact, msg, rendered ?? `[template: ${template.name}]`);
   }
 
+  async sendButtons(
+    contact: Contact,
+    text: string,
+    buttons: { id: string; title: string }[],
+  ): Promise<void> {
+    const convo = await this.conversationFor(contact.id);
+    const { wamid } = await this.whatsapp.sendInteractiveButtons(contact.waId, text, buttons);
+    const summary = `${text}\n[${buttons.map((b) => b.title).join(' · ')}]`;
+    const msg = await this.prisma.message.create({
+      data: {
+        wamid,
+        conversationId: convo.id,
+        direction: 'outbound',
+        type: 'interactive',
+        body: summary,
+        status: 'sent',
+        timestamp: new Date(),
+      },
+    });
+    await this.finish(convo.id, contact, msg, text);
+  }
+
+  async sendList(
+    contact: Contact,
+    text: string,
+    buttonText: string,
+    rows: { id: string; title: string; description?: string }[],
+  ): Promise<void> {
+    const convo = await this.conversationFor(contact.id);
+    const { wamid } = await this.whatsapp.sendInteractiveList(contact.waId, text, buttonText, [
+      { rows },
+    ]);
+    const summary = `${text}\n[${rows.map((r) => r.title).join(' · ')}]`;
+    const msg = await this.prisma.message.create({
+      data: {
+        wamid,
+        conversationId: convo.id,
+        direction: 'outbound',
+        type: 'interactive',
+        body: summary,
+        status: 'sent',
+        timestamp: new Date(),
+      },
+    });
+    await this.finish(convo.id, contact, msg, text);
+  }
+
   private async finish(
     conversationId: string,
     contact: Contact,

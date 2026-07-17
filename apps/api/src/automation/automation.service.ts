@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { AutomationSenderService } from './automation-sender.service';
+import { FlowsService } from './flows.service';
 import { isWithinBusinessHours } from './business-hours.util';
 import { AutoReplyRule, Prisma } from '@nrw/db';
 
@@ -42,6 +43,7 @@ export class AutomationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly sender: AutomationSenderService,
+    private readonly flows: FlowsService,
   ) {}
 
   // ---- Config ----
@@ -140,7 +142,13 @@ export class AutomationService {
     }
   }
 
-  private async evaluate({ conversationId, contactId, text }: InboundTextEvent): Promise<void> {
+  private async evaluate({
+    conversationId,
+    contactId,
+    text,
+    replyId,
+    isNewContact,
+  }: InboundTextEvent): Promise<void> {
     const body = (text || '').trim();
 
     const contact = await this.prisma.contact.findUnique({ where: { id: contactId } });
@@ -168,6 +176,14 @@ export class AutomationService {
         await this.sender.sendText(contact, "You're subscribed again — welcome back!");
         return;
       }
+    }
+
+    // Chatbot flows take precedence: if a flow starts or an active run consumes
+    // this message, don't also fire greeting/away/keyword replies.
+    if (
+      await this.flows.tryHandle({ conversationId, contactId, text, replyId, isNewContact })
+    ) {
+      return;
     }
 
     const config = await this.getConfig();

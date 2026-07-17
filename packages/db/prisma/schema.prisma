@@ -419,3 +419,43 @@ model SequenceEnrollment {
   @@unique([sequenceId, contactId])
   @@index([status, nextRunAt])
 }
+
+// ---------------- Chatbot flows ----------------
+
+model Flow {
+  id          String   @id @default(cuid())
+  name        String
+  enabled     Boolean  @default(false)
+  // how a contact enters: keyword | first_contact | manual
+  trigger     String   @default("keyword")
+  keywords    String[] @default([])
+  // Authored graph: { nodes: FlowNode[] }
+  graph       Json
+  startNodeId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  runs FlowRun[]
+
+  @@index([enabled])
+}
+
+model FlowRun {
+  id             String    @id @default(cuid())
+  flowId         String
+  flow           Flow      @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  conversationId String
+  contactId      String
+  currentNodeId  String?
+  // active | completed | ended
+  status         String    @default("active")
+  // captured answers { varName: value }
+  vars           Json?
+  // set by a delay node; the scheduler resumes the run when due
+  resumeAt       DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([conversationId, status])
+  @@index([status, resumeAt])
+}
