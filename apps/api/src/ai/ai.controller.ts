@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
-import { IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ArrayNotEmpty, IsArray, IsIn, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../auth/admin.guard';
 import { AiService } from './ai.service';
@@ -7,6 +8,16 @@ import { AiService } from './ai.service';
 class AiSettingDto {
   @IsOptional() @IsString() knowledgeBase?: string;
   @IsOptional() @IsString() tone?: string;
+}
+
+class ChatMessageDto {
+  @IsIn(['user', 'assistant']) role: 'user' | 'assistant';
+  @IsString() content: string;
+}
+
+class ChatDto {
+  @IsArray() @ArrayNotEmpty() @ValidateNested({ each: true }) @Type(() => ChatMessageDto)
+  messages: ChatMessageDto[];
 }
 
 @UseGuards(JwtAuthGuard)
@@ -28,6 +39,11 @@ export class AiController {
   @UseGuards(AdminGuard)
   updateSettings(@Body() dto: AiSettingDto) {
     return this.ai.updateSetting(dto);
+  }
+
+  @Post('chat')
+  chat(@Body() dto: ChatDto) {
+    return this.ai.chat(dto.messages);
   }
 
   @Post('conversations/:id/suggest')

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
+import { AiAssistant } from '@/components/AiAssistant';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [client] = useState(() => new QueryClient());
@@ -12,5 +13,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     hydrate();
   }, [hydrate]);
 
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={client}>
+      {children}
+      <AiAssistant />
+    </QueryClientProvider>
+  );
 }

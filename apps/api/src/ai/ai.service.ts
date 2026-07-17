@@ -108,6 +108,30 @@ Rules:
     return { draft: this.textOf(resp) };
   }
 
+  /** Free-form assistant chat for agents (the floating copilot). */
+  async chat(
+    messages: { role: 'user' | 'assistant'; content: string }[],
+  ): Promise<{ reply: string }> {
+    const client = this.ensure();
+    const setting = await this.getSetting();
+    const system = `You are the AI assistant embedded in Neuro Recode's WhatsApp support console, helping the support agents (staff — not the customers directly). Help them answer customer questions, draft replies, summarize, translate, and look things up.
+
+When drafting a customer-facing message, use this tone: ${setting.tone}
+${setting.knowledgeBase ? `\nBusiness knowledge / FAQs (rely on this; don't invent facts):\n${setting.knowledgeBase}\n` : ''}
+Be concise and practical. If a situation involves customer crisis, self-harm, or acute distress, advise the agent to escalate to a human and share professional-help resources — never counsel or diagnose directly.`;
+
+    const resp = await client.messages.create({
+      model: this.model,
+      max_tokens: 1024,
+      thinking: { type: 'adaptive' },
+      system,
+      messages: messages
+        .slice(-20)
+        .map((m) => ({ role: m.role, content: m.content })),
+    });
+    return { reply: this.textOf(resp) };
+  }
+
   /** Summarize the conversation for an agent picking it up. */
   async summarize(conversationId: string): Promise<{ summary: string }> {
     const client = this.ensure();
