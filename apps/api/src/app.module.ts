@@ -17,6 +17,7 @@ import { CannedModule } from './canned/canned.module';
 import { MediaModule } from './media/media.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { AutomationModule } from './automation/automation.module';
+import { AiModule } from './ai/ai.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -38,6 +39,7 @@ import { HealthController } from './health.controller';
     CannedModule,
     WhatsappModule,
     AutomationModule,
+    AiModule,
   ],
   controllers: [HealthController],
 })

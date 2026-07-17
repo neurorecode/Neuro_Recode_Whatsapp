@@ -459,3 +459,13 @@ model FlowRun {
   @@index([conversationId, status])
   @@index([status, resumeAt])
 }
+
+// Singleton AI-assist config (id = "default").
+model AiSetting {
+  id            String   @id @default("default")
+  // Business/brand context + FAQs injected into every AI prompt.
+  knowledgeBase String   @default("")
+  // Tone/voice guidance for drafted replies.
+  tone          String   @default("Warm, supportive, and professional.")
+  updatedAt     DateTime @updatedAt
+}

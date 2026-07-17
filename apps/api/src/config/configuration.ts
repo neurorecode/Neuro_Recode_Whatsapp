@@ -24,6 +24,10 @@ export interface AppConfig {
     secretKey: string;
     bucket: string;
   };
+  anthropic: {
+    apiKey: string;
+    model: string;
+  };
 }
 
 export default (): AppConfig => ({
@@ -65,5 +69,9 @@ export default (): AppConfig => ({
     accessKey: process.env.MINIO_ROOT_USER ?? 'nrw-minio',
     secretKey: process.env.MINIO_ROOT_PASSWORD ?? 'change-me-minio',
     bucket: process.env.MINIO_BUCKET ?? 'nrw-media',
+  },
+  anthropic: {
+    apiKey: process.env.ANTHROPIC_API_KEY ?? '',
+    model: process.env.ANTHROPIC_MODEL ?? 'claude-opus-4-8',
   },
 });
