@@ -174,11 +174,16 @@ export class WhatsappIngestService {
       assigneeAgentId: updated.assigneeAgentId,
     });
 
-    // Fire automations (greeting / away / keyword / opt-out / sequence triggers).
+    // The button/list id the customer tapped, if any (drives flow routing).
+    const replyId =
+      msg.interactive?.button_reply?.id ?? msg.interactive?.list_reply?.id ?? msg.button?.payload;
+
+    // Fire automations (greeting / away / keyword / opt-out / sequence / flow triggers).
     this.events.emit('inbound.text', {
       conversationId: conversation.id,
       contactId: contact.id,
       text: body ?? '',
+      replyId: replyId ?? null,
       isNewContact: !priorContact,
     });
   }
@@ -349,8 +354,10 @@ export class WhatsappIngestService {
       }
       case 'button':
         return { type: 'interactive', body: msg.button?.text ?? null };
-      case 'interactive':
-        return { type: 'interactive', body: null };
+      case 'interactive': {
+        const reply = msg.interactive?.button_reply ?? msg.interactive?.list_reply;
+        return { type: 'interactive', body: reply?.title ?? null };
+      }
       // A reaction (emoji) to one of our messages.
       case 'reaction':
         return { type: 'text', body: msg.reaction?.emoji || 'Reacted' };

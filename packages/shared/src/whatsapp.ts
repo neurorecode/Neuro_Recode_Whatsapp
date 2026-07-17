@@ -50,7 +50,11 @@ export interface WhatsAppInboundMessage {
   sticker?: WhatsAppMediaObject;
   location?: { latitude: number; longitude: number; name?: string; address?: string };
   button?: { text: string; payload: string };
-  interactive?: unknown;
+  interactive?: {
+    type?: 'button_reply' | 'list_reply';
+    button_reply?: { id: string; title: string };
+    list_reply?: { id: string; title: string; description?: string };
+  };
   reaction?: { message_id: string; emoji?: string };
   contacts?: Array<{ name?: { formatted_name?: string } }>;
   system?: { body?: string; type?: string };

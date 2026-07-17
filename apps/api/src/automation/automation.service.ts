@@ -9,6 +9,7 @@ export interface InboundTextEvent {
   conversationId: string;
   contactId: string;
   text: string;
+  replyId?: string | null;
   isNewContact: boolean;
 }
 

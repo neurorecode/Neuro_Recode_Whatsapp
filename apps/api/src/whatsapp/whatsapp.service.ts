@@ -85,6 +85,77 @@ export class WhatsappService {
     return { wamid: res.data?.messages?.[0]?.id as string };
   }
 
+  // ---- Interactive (buttons / lists) ----
+
+  /**
+   * Send interactive reply buttons (max 3). Each button id ≤256 chars, title ≤20.
+   * Only valid inside the 24h window.
+   */
+  async sendInteractiveButtons(
+    to: string,
+    bodyText: string,
+    buttons: { id: string; title: string }[],
+    opts?: { headerText?: string; footerText?: string },
+  ): Promise<SendResult> {
+    const interactive: Record<string, unknown> = {
+      type: 'button',
+      body: { text: bodyText },
+      action: {
+        buttons: buttons.slice(0, 3).map((b) => ({
+          type: 'reply',
+          reply: { id: b.id, title: b.title.slice(0, 20) },
+        })),
+      },
+    };
+    if (opts?.headerText) interactive.header = { type: 'text', text: opts.headerText };
+    if (opts?.footerText) interactive.footer = { text: opts.footerText };
+    const res = await this.http.post(`/${this.phoneNumberId}/messages`, {
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to,
+      type: 'interactive',
+      interactive,
+    });
+    return { wamid: res.data?.messages?.[0]?.id as string };
+  }
+
+  /**
+   * Send an interactive list (a tappable menu). Up to 10 rows across sections.
+   */
+  async sendInteractiveList(
+    to: string,
+    bodyText: string,
+    buttonText: string,
+    sections: { title?: string; rows: { id: string; title: string; description?: string }[] }[],
+    opts?: { headerText?: string; footerText?: string },
+  ): Promise<SendResult> {
+    const interactive: Record<string, unknown> = {
+      type: 'list',
+      body: { text: bodyText },
+      action: {
+        button: buttonText.slice(0, 20),
+        sections: sections.map((s) => ({
+          title: s.title?.slice(0, 24),
+          rows: s.rows.slice(0, 10).map((r) => ({
+            id: r.id,
+            title: r.title.slice(0, 24),
+            description: r.description?.slice(0, 72),
+          })),
+        })),
+      },
+    };
+    if (opts?.headerText) interactive.header = { type: 'text', text: opts.headerText };
+    if (opts?.footerText) interactive.footer = { text: opts.footerText };
+    const res = await this.http.post(`/${this.phoneNumberId}/messages`, {
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to,
+      type: 'interactive',
+      interactive,
+    });
+    return { wamid: res.data?.messages?.[0]?.id as string };
+  }
+
   // ---- Media ----
 
   /** Resolve a media id to a (short-lived) download URL + mime. */
